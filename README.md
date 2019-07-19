@@ -3,7 +3,11 @@
 ###### I hope you have installed python3.6?
 - pip3 install requests
 ##### Try to type something like this:
-`python3 tilespider.py -u https://foo.server.com/tile -b 52.483 44.056 22.500 40.430`
+
+`
+python3 tilespider.py -u https://foo.server.com/tile --top 52.483 --bottom 44.056 --left 22.500 --right 40.430 --min-zoom
+--max-zoom
+`
 
 ⣿⣿⣿⣿⣿⣿⣿⣿⠿⠟⣿⣿⠻⢛⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿⣿\
 ⣿⣿⣿⣿⣿⣿⣿⡻⡆⣤⡅⠁⠀⠀⢫⣿⣿⣿⢿⣿⣿⣿⣿⣿⣿⣿⣻⣿⣿⣿⣿⣿⣿⣿⣿⣿\

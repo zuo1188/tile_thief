@@ -14,7 +14,7 @@ from collections import namedtuple
 # kiev top=51.413 bottom=49.554 left=29.224 right=32.080 center=(50.4448, 30.5489)
 # odessa: top=47.458 bottom=45.599 left=29.421 right=32.278 center=(46.4752, 30.7761)
 # nikolaev: top=48.162 bottom=46.408 left=30.388 right=33.157 center=(46.9606, 32.0560)
-# tileservers:
+# example tileservers:
 # argis="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile"
 # opentopomaps: "https://tile.opentopomap.org"
 possible_domain_prefixes = ["a", "b", "c"] # Only for OpenTopoMaps

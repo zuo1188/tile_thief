@@ -1,4 +1,4 @@
-######Steals tiles from any tileserver that distributes them using {zyx} scheme (or {xyz}, anyway)
+Steals tiles from any tileserver that distributes them using {zyx} scheme (or {xyz}, anyway)
 ##### How to use this shit?
 ###### I hope you have installed python3.6?
 - pip3 install requests

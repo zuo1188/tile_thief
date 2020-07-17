@@ -9,7 +9,10 @@ import sys
 import time
 import subprocess
 from collections import namedtuple
-
+from util import disk_to_mbtiles
+import json
+import tqdm
+import pathlib
 # ukraine top=52.483 bottom=44.056 left=22.500 right=40.430 center=(48.487, 32.915)
 # kiev top=51.413 bottom=49.554 left=29.224 right=32.080 center=(50.4448, 30.5489)
 # odessa: top=47.458 bottom=45.599 left=29.421 right=32.278 center=(46.4752, 30.7761)
@@ -20,7 +23,7 @@ from collections import namedtuple
 possible_domain_prefixes = ["a", "b", "c"] # Only for OpenTopoMaps
 
 parser = argparse.ArgumentParser(description="Takes a bounds as input, calculates tile numbers from it and downloads them as image files.")
-parser.add_argument("--min-zoom", type=int, default=3)
+parser.add_argument("--min-zoom", type=int, default=5)
 parser.add_argument("--max-zoom", type=int, default=16)
 parser.add_argument("--center-lat", type=float, default=30.5489)
 parser.add_argument("--center-lon", type=float, default=50.4448)
@@ -29,7 +32,7 @@ parser.add_argument("--top", type=float, default=51.413)
 parser.add_argument("--bottom", type=float, default=49.554)
 parser.add_argument("--left", type=float, default=29.224)
 parser.add_argument("--right", type=float, default=32.080)
-parser.add_argument("--url", default="https://services.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile")
+parser.add_argument("--url", default="http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}")
 parser.add_argument("-o", "--output", default="tiles", help="destination directory")
 parser.add_argument("--tile_size", type=int, default=256)
 
@@ -40,8 +43,8 @@ if opts.min_zoom > opts.max_zoom:
 	print("max-zoom is not > min-zoom")
 	sys.exit(1)
 
-if opts.max_zoom > 18:
-	print("max-zoom can't be > 18")
+if opts.max_zoom > 22:
+	print("max-zoom can't be > 22")
 	sys.exit(1)
 
 if opts.min_zoom < 1:
@@ -73,7 +76,7 @@ def deg2num(lat_deg, lon_deg, zoom):
 
 
 def download(rect_bounds):
-	output_dir = "%s" % os.path.basename(opts.output)
+	output_dir = "%s" % opts.output
 	if not os.path.exists(output_dir):
 		os.makedirs(output_dir)
 
@@ -88,12 +91,19 @@ def download(rect_bounds):
 		(max_x, max_y) = deg2num(rect_bounds.bottom, rect_bounds.right, zoom)
 
 		print("zoom=%d - min_x=%d, min_y=%d, max_x=%d, max_y=%d" % (zoom, min_x, min_y, max_x, max_y))
+		total_count = ((max_y-min_y+1)*(max_x-min_x+1))
+		pbar = tqdm.tqdm(total=total_count)
 
 		for y_index in range(min_y, max_y + 1):
-			print(processed_cnt, download_cnt, sum_size)
+			#print(processed_cnt, download_cnt, sum_size)
 			for x_index in range(min_x, max_x + 1):
 				processed_cnt += 1
-				tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
+				pbar.update()
+				#tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
+				tile_url = opts.url
+				tile_url=tile_url.replace('{z}',str(zoom))
+				tile_url=tile_url.replace('{x}',str(x_index))
+				tile_url=tile_url.replace('{y}',str(y_index))
 
 				path = "%s/%d/%d" % (output_dir, zoom, x_index)
 				filename = path + "/%d.png" % y_index
@@ -114,7 +124,7 @@ def download(rect_bounds):
 					for try_nr in range(1, max_retries + 2):
 						#for try_nr in range(1, 2):
 						try:
-							print("trying %s" % tile_url)
+							#print("trying %s" % tile_url)
 							webFile = requests.get(tile_url)
 							data = webFile.content
 							download_cnt += 1
@@ -198,3 +208,32 @@ rect_bounds.left = opts.left
 
 # download
 download(rect_bounds)
+
+#write metadata.json to directory
+with open('%s/metadata.json' % pathlib.Path(__file__).parent.absolute()) as meta_file:
+	meta_json = json.load(meta_file)
+	meta_json['bounds']=",".join([str(rect_bounds.left),str(rect_bounds.bottom),str(rect_bounds.right),str(rect_bounds.top)])
+	center_x = (rect_bounds.left+rect_bounds.right)/2.0
+	center_y = (rect_bounds.top+rect_bounds.bottom)/2.0
+	meta_json['center']=",".join([str(center_x),str(center_y),'14'])
+	meta_json['minzoom']=str(opts.min_zoom)
+	meta_json['maxzoom']=str(opts.max_zoom)
+	output_meta_file_name = "%s/metadata.json" % opts.output
+	if os.path.exists(output_meta_file_name):
+		os.remove(output_meta_file_name)
+	with open(output_meta_file_name,'w') as output_meta_file:
+		json.dump(meta_json,output_meta_file)
+
+
+mbtile_name = "%s.mbtiles" % opts.output
+if os.path.exists(mbtile_name):
+	os.remove(mbtile_name)
+
+print("merge directory to mbtiles: %s" % mbtile_name)
+kwargs = {"silent":True,
+		"commpression":False,		
+		'scheme':'xyz',
+		'format':'png',
+		'callback':'grid'}
+disk_to_mbtiles(opts.output,mbtile_name,**kwargs)
+print("end")

@@ -1,0 +1,16 @@
+{
+    "attribution": "test",
+    "name": "tokyo.mbtiles",
+    "description": "tokyo.mbtiles",
+    "format": "png",
+    "created": 1451865600000,
+    "minzoom": "3",
+    "maxzoom": "21",
+    "scheme": "xyz",
+    "private": false,
+    "tilejson": "2.0.0",
+    "type": "overlay",
+    "bounds": "139.773,35.699,139.775981,35.696044",
+    "center": "139.773,35.699,14",
+    "json": "{\"vector_layers\":[{\"description\":\"\",\"fields\":{\"kind\":\"\",\"poi_flag\":\"\",\"rating\":\"\",\"src_name\":\"\"},\"id\":\"poi\",\"source\":\"chengyang.mbtiles\",\"source_name\":\"chengyang.mbtiles\"},{\"description\":\"\",\"fields\":{\"class\":\"\",\"direction\":\"\",\"lanenum\":\"\",\"elevated\":\"\",\"structure\":\"\"},\"id\":\"road_l\",\"source\":\"chengyang.mbtiles\",\"source_name\":\"chengyang.mbtiles\"}]}"
+}

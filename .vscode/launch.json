@@ -1,0 +1,19 @@
+{
+    // Use IntelliSense to learn about possible attributes.
+    // Hover to view descriptions of existing attributes.
+    // For more information, visit: https://go.microsoft.com/fwlink/?linkid=830387
+    "version": "0.2.0",
+    "configurations": [
+        {
+            "name": "Python: 当前文件",
+            "type": "python",
+            "request": "launch",
+            "program": "${file}",
+            "console": "integratedTerminal",
+            "args":[
+                "--top", "35.699", "--left", "139.773", "--bottom", "35.696044", "--right", "139.775981",
+                "--max-zoom","21",
+                "--output", "/Users/zuojingwei/Dev/tile_spider/tokyo"]
+        }
+    ]
+}

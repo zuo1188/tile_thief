@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+import asyncio
 import argparse
 import math
 import requests
@@ -10,6 +10,9 @@ import time
 import subprocess
 from collections import namedtuple
 from util import disk_to_mbtiles
+from download import download_tile
+from bounds2tiles import bounds2tiles
+from geojson2tiles import geojson2tiles
 import json
 import tqdm
 import pathlib
@@ -35,6 +38,7 @@ parser.add_argument("--right", type=float, default=32.080)
 parser.add_argument("--url", default="http://mt0.google.com/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}")
 parser.add_argument("-o", "--output", default="tiles", help="destination directory")
 parser.add_argument("--tile_size", type=int, default=256)
+parser.add_argument("--geojson_path", default="")
 
 opts = parser.parse_args()
 otp = False
@@ -74,8 +78,7 @@ def deg2num(lat_deg, lon_deg, zoom):
 	ytile = int((1.0 - math.log(math.tan(lat_rad) + (1 / math.cos(lat_rad))) / math.pi) / 2.0 * n)
 	return xtile, ytile
 
-
-def download(rect_bounds):
+def download(rect_bounds, geojson_path):
 	output_dir = "%s" % opts.output
 	if not os.path.exists(output_dir):
 		os.makedirs(output_dir)
@@ -87,89 +90,76 @@ def download(rect_bounds):
 		download_cnt = 0
 		sum_size = 0
 		failed_cnt = 0
-		(min_x, min_y) = deg2num(rect_bounds.top, rect_bounds.left, zoom)
-		(max_x, max_y) = deg2num(rect_bounds.bottom, rect_bounds.right, zoom)
 
-		print("zoom=%d - min_x=%d, min_y=%d, max_x=%d, max_y=%d" % (zoom, min_x, min_y, max_x, max_y))
-		total_count = ((max_y-min_y+1)*(max_x-min_x+1))
-		pbar = tqdm.tqdm(total=total_count)
+		if geojson_path == '':
+			tiles = bounds2tiles(rect_bounds, zoom)
+		else:
+			tiles = geojson2tiles(geojson_path, zoom)
 
-		for y_index in range(min_y, max_y + 1):
-			#print(processed_cnt, download_cnt, sum_size)
-			for x_index in range(min_x, max_x + 1):
-				processed_cnt += 1
+		download_tasks = []
+		for tile in tiles:
+			# processed_cnt += 1
+			# pbar.update()
+			#tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
+			tile_url = opts.url
+			x_index = tile[0]
+			y_index = tile[1]
+			tile_url=tile_url.replace('{z}',str(zoom))
+			tile_url=tile_url.replace('{x}',str(x_index))
+			tile_url=tile_url.replace('{y}',str(y_index))
+
+			path = "%s/%d/%d" % (output_dir, zoom, x_index)
+			filename = path + "/%d.png" % y_index
+			if not os.path.exists(path):
+				os.makedirs(path)
+
+			if not os.path.exists(filename):
+				download_tasks.append({
+					'tile_index': [x_index, y_index, zoom],
+					'tile_url': tile_url,
+					'filename': filename
+				})
+
+
+		def saveFile(filename, data):
+			try:
+				# print(filename, data)
+				localFile = open(filename, 'wb')
+				localFile.write(data)
+				localFile.close()
+
+				# total_download_size += os.path.getsize(filename)
+				# sum_size += len(data)
+			except Exception as e:
+				os.unlink(filename)
+				# failed_cnt += 1
+				print(e)
+				print("ERROR for %s" % tile_url)
+
+		async def taskDispatcher(download_infos):
+			tasks = map(download_tile, download_infos)
+			done, pending = await asyncio.wait(tasks) # 子生成器
+			pbar = tqdm.tqdm(total=len(tiles))
+			for r in done: # done和pending都是一个任务，所以返回结果需要逐个调用result()
 				pbar.update()
-				#tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
-				tile_url = opts.url
-				tile_url=tile_url.replace('{z}',str(zoom))
-				tile_url=tile_url.replace('{x}',str(x_index))
-				tile_url=tile_url.replace('{y}',str(y_index))
+				result = r.result()
+				# print(result['tile_info'])
+				if result['download_status'] == 'success':
+					# download_cnt += 1
+					filename = result['tile_info']['filename']
+					data = result['data']
+					saveFile(filename, data)
 
-				path = "%s/%d/%d" % (output_dir, zoom, x_index)
-				filename = path + "/%d.png" % y_index
-				if not os.path.exists(path):
-					os.makedirs(path)
-
-				data = None
-				if not os.path.exists(filename):
-					webFile = None
-
-					# low zoom-levels take long to render. Give more time (more retries possible)
-					max_retries = 2 ** (15 - zoom)
-					if max_retries < 1:
-						max_retries = 1
-
-					download_succeeded = False
-
-					for try_nr in range(1, max_retries + 2):
-						#for try_nr in range(1, 2):
-						try:
-							#print("trying %s" % tile_url)
-							webFile = requests.get(tile_url)
-							data = webFile.content
-							download_cnt += 1
-							download_succeeded = True
-							break
-						except Exception as e:
-							print(e)
-							print("%s failed on try nr %d" % (tile_url, try_nr))
-							# give the server some time, maybe that helps
-							time.sleep(2)
-
-					if not download_succeeded:
-						# TODO: Try to find true server
-						print(tile_url)
-						continue
-
-					try:
-						localFile = open(filename, 'wb')
-						localFile.write(data)
-						webFile.close()
-						localFile.close()
-
-						total_download_size += os.path.getsize(filename)
-
-						# if opts.optimize_png:
-						# 	tmpfile = "%s/pngcrush_tmp.png" % output_dir
-						# 	cmd = "pngcrush -q " + filename + " " + tmpfile
-						# 	retcode = subprocess.call(cmd.split(" "))
-						# 	if retcode != 0:
-						# 		print("ERROR: pngcrush returned %d" % retcode)
-						# 	else:
-						# 		# replacing the downloaded file with the optimized one
-						# 		os.unlink(filename)
-						# 		os.rename(tmpfile, filename)
-						# 		total_optimized_size += os.path.getsize(filename)
-
-						sum_size += len(data)
-
-					except Exception as e:
-						os.unlink(filename)
-						failed_cnt += 1
-						print(e)
-						print("ERROR for %s" % tile_url)
-						continue
-
+		if len(download_tasks) > 0:
+			start = time.time()
+			loop = asyncio.get_event_loop()
+			# try:
+			# print(download_tasks)
+			loop.run_until_complete(taskDispatcher(download_tasks)) # 完成事件循环，直到最后一个任务结束
+			# finally:
+				# loop.close() # 结束事件循环
+			print('所有IO任务总耗时%.5f秒' % float(time.time()-start))
+			
 		success_cnt = processed_cnt - failed_cnt
 		avg_size = 0
 		# avoid possible division by zero
@@ -205,9 +195,10 @@ rect_bounds.top = opts.top
 rect_bounds.bottom = opts.bottom
 rect_bounds.right = opts.right
 rect_bounds.left = opts.left
+geojson_path = opts.geojson_path
 
 # download
-download(rect_bounds)
+download(rect_bounds, geojson_path)
 
 #write metadata.json to directory
 with open('%s/metadata.json' % pathlib.Path(__file__).parent.absolute()) as meta_file:

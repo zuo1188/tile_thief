@@ -2,7 +2,7 @@
 import argparse
 import sys
 
-from download import start_download
+from download import download
 
 # ukraine top=52.483 bottom=44.056 left=22.500 right=40.430 center=(48.487, 32.915)
 # kiev top=51.413 bottom=49.554 left=29.224 right=32.080 center=(50.4448, 30.5489)
@@ -27,7 +27,9 @@ parser.add_argument("--url", default="http://mt0.google.com/vt/lyrs=s&hl=en&x={x
 parser.add_argument("-o", "--output", default="tiles", help="destination directory")
 parser.add_argument("--tile_size", type=int, default=256)
 parser.add_argument("--geojson_path", default="")
+parser.add_argument("--geojson")
 parser.add_argument("--concurrent_num", type=int, default=3)
+parser.add_argument("--map_type", default="google")
 
 opts = parser.parse_args()
 otp = False
@@ -60,4 +62,4 @@ if opts.dot:
 	otp = True
 
 
-start_download(opts)
+download(opts)

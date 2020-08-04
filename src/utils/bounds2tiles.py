@@ -9,7 +9,7 @@ def deg2num(lat_deg, lon_deg, zoom):
 	return xtile, ytile
 
 def bounds2tiles(rect_bounds, zoom):
-    print(rect_bounds)
+    # print(rect_bounds)
     (min_x, min_y) = deg2num(rect_bounds.top, rect_bounds.left, zoom)
     (max_x, max_y) = deg2num(rect_bounds.bottom, rect_bounds.right, zoom)
 

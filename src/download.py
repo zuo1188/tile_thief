@@ -9,7 +9,12 @@ from utils.geojson2tiles import geojson2tiles
 from utils.download_tile import download_tile
 from utils.tiles2mbtiles import tiles2mbtiles
 
-def start_download(opts):
+SERVER_URL_MAPPING = {
+    "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
+    "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
+}
+
+def download(opts):
     rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
 
     # get bounds
@@ -19,10 +24,10 @@ def start_download(opts):
     rect_bounds.left = opts.left
 
     # download
-    download(opts, rect_bounds)
+    download_tiles(opts, rect_bounds)
     tiles2mbtiles(opts)
 
-def download(opts, rect_bounds):
+def download_tiles(opts, rect_bounds):
     output_dir = "%s" % opts.output
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -45,7 +50,7 @@ def download(opts, rect_bounds):
             # processed_cnt += 1
             # pbar.update()
             #tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
-            tile_url = opts.url
+            tile_url = SERVER_URL_MAPPING[opts.map_type]
             x_index = tile[0]
             y_index = tile[1]
             tile_url=tile_url.replace('{z}',str(zoom))

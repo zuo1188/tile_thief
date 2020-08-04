@@ -3,6 +3,7 @@ import requests
 import asyncio
 import os
 import aiohttp
+import socket
 
 async def download_tile(download_tasks):
     # print(download_tasks) 

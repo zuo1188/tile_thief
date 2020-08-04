@@ -2,10 +2,12 @@ import os
 import asyncio
 import time
 import tqdm
+import geojson
 from collections import namedtuple
+from types import SimpleNamespace
 
 from utils.bounds2tiles import bounds2tiles
-from utils.geojson2tiles import geojson2tiles
+from utils.geojson2tiles import geojson2tiles,geojson_path2tiles
 from utils.download_tile import download_tile
 from utils.tiles2mbtiles import tiles2mbtiles
 
@@ -14,20 +16,38 @@ SERVER_URL_MAPPING = {
     "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
 }
 
-def download(opts):
-    rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
+def get_bbox(coord_list):
+    box = []
+    for i in (0,1):
+        res = sorted(coord_list, key=lambda x:x[i])
+        box.append((res[0][i],res[-1][i]))
+    return [box[0][0], box[1][0], box[0][1], box[1][1]]
 
-    # get bounds
-    rect_bounds.top = opts.top
-    rect_bounds.bottom = opts.bottom
-    rect_bounds.right = opts.right
-    rect_bounds.left = opts.left
+def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
+    bbox = get_bbox(list(geojson.utils.coords(geometry)))
+    opts = {}
+    opts["min_zoom"]=min_zoom
+    opts["max_zoom"]=max_zoom
+    opts["geojson_path"]=""
+    opts["geojson"]=geometry
+    opts["map_type"]=map_type
+    opts["output"]=output_dir
+    opts["concurrent_num"]=process_count
+    opts["top"]=bbox[3]
+    opts["bottom"]=bbox[1]
+    opts["left"]=bbox[2]
+    opts["right"]=bbox[0]
+    new_opts=SimpleNamespace(**opts)
+    download_tiles(new_opts)
+    tiles2mbtiles(new_opts)
 
+def download_by_cmd(opts):
     # download
-    download_tiles(opts, rect_bounds)
+    download_tiles(opts)
     tiles2mbtiles(opts)
 
-def download_tiles(opts, rect_bounds):
+def download_tiles(opts):
+    print(opts)
     output_dir = "%s" % opts.output
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
@@ -40,16 +60,26 @@ def download_tiles(opts, rect_bounds):
         sum_size = 0
         failed_cnt = 0
 
-        if opts.geojson_path == '':
+        if opts.geojson_path == '' and opts.geojson == '':
+            rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
+
+            # get bounds
+            rect_bounds.top = opts.top
+            rect_bounds.bottom = opts.bottom
+            rect_bounds.right = opts.right
+            rect_bounds.left = opts.left
             tiles = bounds2tiles(rect_bounds, zoom)
+        elif opts.geojson_path != '':
+            tiles = geojson_path2tiles(opts.geojson_path, zoom)
         else:
-            tiles = geojson2tiles(opts.geojson_path, zoom)
+            tiles = geojson2tiles(opts.geojson, zoom) 
 
         download_tasks = []
         for tile in tiles:
             # processed_cnt += 1
             # pbar.update()
             #tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
+            print(opts.map_type)
             tile_url = SERVER_URL_MAPPING[opts.map_type]
             x_index = tile[0]
             y_index = tile[1]
@@ -137,3 +167,43 @@ def download_tiles(opts, rect_bounds):
 
         print("processed %d tiles - downloaded: %d, failed: %d, avg size: %d" % (processed_cnt, download_cnt, failed_cnt, avg_size))
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
+
+# download(4, 10, {
+#       "type": "Feature",
+#       "properties": {},
+#       "geometry": {
+#         "type": "Polygon",
+#         "coordinates": [
+#           [
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ],
+#             [
+#               116.39190673828124,
+#               39.91289633555756
+#             ],
+#             [
+#               116.22161865234376,
+#               39.8992015115692
+#             ],
+#             [
+#               116.25045776367186,
+#               39.74204232950662
+#             ],
+#             [
+#               116.49902343749999,
+#               39.716694496739876
+#             ],
+#             [
+#               116.51275634765624,
+#               39.99395569397331
+#             ],
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ]
+#           ]
+#         ]
+#       }
+#     }, 'google_map_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)

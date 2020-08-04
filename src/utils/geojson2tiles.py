@@ -16,8 +16,11 @@ def load_geoJSON_from_path(path):
         data = json.load(f)
     return data
 
-def geojson2tiles(geojson_path, zoom):
+def geojson_path2tiles(geojson_path, zoom):
     geojson = load_geoJSON_from_path(geojson_path)
     return burn(geojson['features'], zoom)
+
+def geojson2tiles(geojson, zoom):
+    return burn([geojson], zoom)
 
 # geojson2tiles('/Users/jrontend/Downloads/test.geojson', 14)

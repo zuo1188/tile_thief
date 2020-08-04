@@ -27,6 +27,7 @@ parser.add_argument("--url", default="http://mt0.google.com/vt/lyrs=s&hl=en&x={x
 parser.add_argument("-o", "--output", default="tiles", help="destination directory")
 parser.add_argument("--tile_size", type=int, default=256)
 parser.add_argument("--geojson_path", default="")
+parser.add_argument("--concurrent_num", type=int, default=3)
 
 opts = parser.parse_args()
 otp = False

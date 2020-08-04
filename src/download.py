@@ -67,7 +67,7 @@ def download(opts, rect_bounds):
 
         def saveFile(filename, data):
             try:
-                print(filename, data)
+                # print(filename, data)
                 localFile = open(filename, 'wb')
                 localFile.write(data)
                 localFile.close()
@@ -81,12 +81,13 @@ def download(opts, rect_bounds):
                 print("ERROR for %s" % tile_url)
 
         async def taskDispatcher(download_infos):
-            no_concurrent = 1
+            no_concurrent = opts.concurrent_num
             dltasks = set()
             i = 3
             pbar = tqdm.tqdm(total=len(tiles))
             for download_info_item in download_infos:
                 pbar.update()
+                dltasks.add(download_tile(download_info_item))
                 if len(dltasks) >= no_concurrent:
                     # Wait for some download to finish before adding a new one
                     _done, dltasks = await asyncio.wait(dltasks)
@@ -99,7 +100,7 @@ def download(opts, rect_bounds):
                             filename = result['tile_info']['filename']
                             data = result['data']
                             saveFile(filename, data)
-                dltasks.add(download_tile(download_info_item))
+                
 			# tasks = map(download_tile, download_infos)
 			# done, pending = await asyncio.wait(tasks) # 子生成器
 			# pbar = tqdm.tqdm(total=len(tiles))

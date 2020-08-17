@@ -31,9 +31,7 @@ def bing_get_meta_info():
         print(bing_meta_info)
         return bing_meta_info["resourceSets"][0]["resources"][0]
 
-bing_meta = bing_get_meta_info()
-
-def get_bing_url(coord):
+def get_bing_url(coord, bing_meta):
     bing_url = bing_meta["imageUrl"].replace("{subdomain}", random.choice(bing_meta["imageUrlSubdomains"]))
     return bing_url.replace("{quadkey}", xyz2BingQuadKey(coord))
     

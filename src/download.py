@@ -6,12 +6,13 @@ import geojson
 import json
 from collections import namedtuple
 from types import SimpleNamespace
+from multiprocessing import Pool
 
 from utils.bounds2tiles import bounds2tiles
 from utils.geojson2tiles import geojson2tiles,geojson_path2tiles
 from utils.download_tile import download_tile
 from utils.tiles2mbtiles import tiles2mbtiles
-from utils.map_bing import get_bing_url
+from utils.map_bing import get_bing_url, bing_get_meta_info
 from utils.map_tencent import get_tencent_url
 from utils.map_baidu import get_baidu_url, baidu_bounds2tiles, baidu_get_number_of_tiles_at_level
 
@@ -63,6 +64,8 @@ def download_tiles(opts):
     output_dir = "%s" % opts.output
     if not os.path.exists(output_dir):
         os.makedirs(output_dir)
+    if opts.map_type == 'bing_sat':
+        bing_meta_info = bing_get_meta_info()
 
     total_download_size = 0
     total_optimized_size = 0
@@ -105,7 +108,7 @@ def download_tiles(opts):
             x_index = tile[0]
             y_index = tile[1]
             if opts.map_type == 'bing_sat':
-                tile_url=get_bing_url([x_index,y_index,zoom])
+                tile_url=get_bing_url([x_index,y_index,zoom], bing_meta_info)
             elif opts.map_type == 'tencent_sat':
                 tile_url=get_tencent_url([x_index,y_index,zoom])
             elif opts.map_type == 'baidu_sat':
@@ -146,27 +149,23 @@ def download_tiles(opts):
                 print(e)
                 print("ERROR for %s" % tile_url)
 
-        async def taskDispatcher(download_infos):
+        def callback(result):
+            # print(result)
+            # print(result['tile_info'])
+            if result['download_status'] == 'success':
+                # download_cnt += 1
+                filename = result['tile_info']['filename']
+                data = result['data']
+                saveFile(filename, data)
+
+        def taskDispatcher(download_infos):
             no_concurrent = opts.concurrent_num
-            dltasks = set()
-            i = 3
-            pbar = tqdm.tqdm(total=len(tiles))
+            print(no_concurrent)
+            pool = Pool(int(no_concurrent))
             for download_info_item in download_infos:
-                pbar.update()
-                dltasks.add(download_tile(download_info_item))
-                if len(dltasks) >= no_concurrent:
-                    # Wait for some download to finish before adding a new one
-                    _done, dltasks = await asyncio.wait(dltasks)
-                    for r in _done:  # done和pending都是一个任务，所以返回结果需要逐个调用result()
-                        result = r.result()
-                        # print(result)
-                        # print(result['tile_info'])
-                        if result['download_status'] == 'success':
-                            # download_cnt += 1
-                            filename = result['tile_info']['filename']
-                            data = result['data']
-                            saveFile(filename, data)
-                
+                pool.apply_async(download_tile, args=(download_info_item,), callback=callback)
+            pool.close()
+            pool.join()
 			# tasks = map(download_tile, download_infos)
 			# done, pending = await asyncio.wait(tasks) # 子生成器
 			# pbar = tqdm.tqdm(total=len(tiles))
@@ -182,12 +181,14 @@ def download_tiles(opts):
 
         if len(download_tasks) > 0:
             start = time.time()
-            loop = asyncio.get_event_loop()
+            # loop = asyncio.get_event_loop()
             # try:
             # print(download_tasks)
-            loop.run_until_complete(taskDispatcher(download_tasks)) # 完成事件循环，直到最后一个任务结束
+            # loop.run_until_complete(taskDispatcher(download_tasks)) # 完成事件循环，直到最后一个任务结束
             # finally:
                 # loop.close() # 结束事件循环
+            # pool = Pool(5)
+            taskDispatcher(download_tasks)
             print('所有IO任务总耗时%.5f秒' % float(time.time()-start))
             
         success_cnt = processed_cnt - failed_cnt
@@ -200,44 +201,45 @@ def download_tiles(opts):
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
 
 
+if __name__ == '__main__':
+    download(6, 12, {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              116.39739990234375,
+              40.01499435375046
+            ],
+            [
+              116.39190673828124,
+              39.91289633555756
+            ],
+            [
+              116.22161865234376,
+              39.8992015115692
+            ],
+            [
+              116.25045776367186,
+              39.74204232950662
+            ],
+            [
+              116.49902343749999,
+              39.716694496739876
+            ],
+            [
+              116.51275634765624,
+              39.99395569397331
+            ],
+            [
+              116.39739990234375,
+              40.01499435375046
+            ]
+          ]
+        ]
+      }
+    }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
 # get_vector_info()
 
-# download(6, 12, {
-#       "type": "Feature",
-#       "properties": {},
-#       "geometry": {
-#         "type": "Polygon",
-#         "coordinates": [
-#           [
-#             [
-#               116.39739990234375,
-#               40.01499435375046
-#             ],
-#             [
-#               116.39190673828124,
-#               39.91289633555756
-#             ],
-#             [
-#               116.22161865234376,
-#               39.8992015115692
-#             ],
-#             [
-#               116.25045776367186,
-#               39.74204232950662
-#             ],
-#             [
-#               116.49902343749999,
-#               39.716694496739876
-#             ],
-#             [
-#               116.51275634765624,
-#               39.99395569397331
-#             ],
-#             [
-#               116.39739990234375,
-#               40.01499435375046
-#             ]
-#           ]
-#         ]
-#       }
-#     }, 'baidu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)

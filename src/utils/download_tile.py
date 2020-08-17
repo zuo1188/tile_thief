@@ -1,15 +1,12 @@
 import time
 import requests
-import asyncio
 import os
-import aiohttp
-import socket
 
 REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
 }
 
-async def download_tile(download_tasks):
+def download_tile(download_tasks):
     # print(download_tasks) 
     webFile = None
     data = None
@@ -25,12 +22,10 @@ async def download_tile(download_tasks):
         #for try_nr in range(1, 2):
         try:
             print("trying %s" % tile_url)
-            async with aiohttp.ClientSession() as session:
-                async with session.get(tile_url, headers=REQUEST_HEADERS) as resp:
-                    data = await resp.read()
-                    download_succeeded = True
-                    resp.close()
-                    break
+            webFile = requests.get(tile_url, headers=REQUEST_HEADERS)
+            data = webFile.content
+            download_succeeded = True
+            break
         except Exception as e:
             print(e)
             print("%s failed on try nr %d" % (tile_url, try_nr))

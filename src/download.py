@@ -8,6 +8,7 @@ from collections import namedtuple
 from types import SimpleNamespace
 from multiprocessing import Pool
 
+from utils.downloader import downloader
 from utils.bounds2tiles import bounds2tiles
 from utils.geojson2tiles import geojson2tiles,geojson_path2tiles
 from utils.download_tile import download_tile
@@ -32,6 +33,25 @@ def get_bbox(coord_list):
         box.append((res[0][i],res[-1][i]))
     return [box[0][0], box[1][0], box[0][1], box[1][1]]
 
+def get_download_info(min_zoom, max_zoom, geometry, map_type):
+    download_info = {}
+    for zoom in range(min_zoom, max_zoom + 1):
+        if map_type == 'baidu_sat':
+            bbox = get_bbox(list(geojson.utils.coords(geometry)))
+            rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
+            # get bounds
+            rect_bounds.top = bbox[3]
+            rect_bounds.bottom = bbox[1]
+            rect_bounds.right = bbox[2]
+            rect_bounds.left = bbox[0]
+            tiles = baidu_bounds2tiles(rect_bounds, zoom)
+        else:
+            tiles = geojson2tiles(geometry, zoom) 
+        download_info['zoom' + str(zoom)] = len(tiles)
+    print(download_info)
+    return download_info
+
+
 def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
@@ -53,6 +73,21 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
 def get_vector_info():
     with open("./src/data/vector_list.json",'r') as load_f:
         return json.load(load_f)
+
+def download_vector(name, format, output):
+    with open("./src/data/vector_map.json",'r') as load_f:
+        vector_mapping = json.load(load_f)
+    if name not in vector_mapping:
+        print('矢量数据' + name + '不存在')
+        return False
+    elif format not in vector_mapping[name]:
+        print('矢量数据' + name + '不存在' + format + '格式')
+        return False
+    else:
+        print(vector_mapping[name][format])
+        filename = output + "/%s.%s" % (name, format)
+        downloader(vector_mapping[name][format], filename)
+        return True
 
 def download_by_cmd(opts):
     # download
@@ -217,6 +252,7 @@ def download_tiles(opts):
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
 
 
+
 if __name__ == '__main__':
 
     get_ge_history()
@@ -262,3 +298,87 @@ if __name__ == '__main__':
     }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
 # get_vector_info()
 '''
+=======
+# if __name__ == '__main__':
+#     download(6, 12, {
+#       "type": "Feature",
+#       "properties": {},
+#       "geometry": {
+#         "type": "Polygon",
+#         "coordinates": [
+#           [
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ],
+#             [
+#               116.39190673828124,
+#               39.91289633555756
+#             ],
+#             [
+#               116.22161865234376,
+#               39.8992015115692
+#             ],
+#             [
+#               116.25045776367186,
+#               39.74204232950662
+#             ],
+#             [
+#               116.49902343749999,
+#               39.716694496739876
+#             ],
+#             [
+#               116.51275634765624,
+#               39.99395569397331
+#             ],
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ]
+#           ]
+#         ]
+#       }
+#     }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
+# get_vector_info()
+
+# download_vector('Azores', 'pbf', '/Users/jrontend/myPrj/tile_thief/')
+# get_download_info(6, 12, {
+#       "type": "Feature",
+#       "properties": {},
+#       "geometry": {
+#         "type": "Polygon",
+#         "coordinates": [
+#           [
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ],
+#             [
+#               116.39190673828124,
+#               39.91289633555756
+#             ],
+#             [
+#               116.22161865234376,
+#               39.8992015115692
+#             ],
+#             [
+#               116.25045776367186,
+#               39.74204232950662
+#             ],
+#             [
+#               116.49902343749999,
+#               39.716694496739876
+#             ],
+#             [
+#               116.51275634765624,
+#               39.99395569397331
+#             ],
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ]
+#           ]
+#         ]
+#       }
+#     }, 'tianditu_sat')
+

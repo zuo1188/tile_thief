@@ -28,7 +28,7 @@ parser.add_argument("--tile_size", type=int, default=256)
 parser.add_argument("--geojson_path", default="")
 parser.add_argument("--geojson", default="")
 parser.add_argument("--concurrent_num", type=int, default=3)
-parser.add_argument("--map_type", default="google")
+parser.add_argument("--map_type", default="google_map_sat")
 
 opts = parser.parse_args()
 otp = False

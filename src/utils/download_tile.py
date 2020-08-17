@@ -5,6 +5,10 @@ import os
 import aiohttp
 import socket
 
+REQUEST_HEADERS = {
+    'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
+}
+
 async def download_tile(download_tasks):
     # print(download_tasks) 
     webFile = None
@@ -22,7 +26,7 @@ async def download_tile(download_tasks):
         try:
             print("trying %s" % tile_url)
             async with aiohttp.ClientSession() as session:
-                async with session.get(tile_url) as resp:
+                async with session.get(tile_url, headers=REQUEST_HEADERS) as resp:
                     data = await resp.read()
                     download_succeeded = True
                     resp.close()

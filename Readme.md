@@ -7,7 +7,8 @@ https://www.runoob.com/python/python-install.html
 
 1.2 运行库安装
 
-先 安装GDAL开发库，并把gdal include lib 加入到系统path变量
+先 安装rasterio开发库，https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio
+碰到缺什么，直接pip install 就可以了
 ``` bash
 pip install ****
 

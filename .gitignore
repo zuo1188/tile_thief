@@ -3,3 +3,4 @@ tiles/
 __pycache__/
 tokyo/
 .DS_Store
+.vscode/

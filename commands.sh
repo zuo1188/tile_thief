@@ -21,5 +21,12 @@ python3 src/command.py --map_type=google_map_sat \                              
 # python main.py --url http://shangetu6.map.bdimg.com/it/u=x={x};y={y};z={z};v=009;type=sate&fm=46 \
 # --left 116.2 --bottom 39.1 --right 116.3 --top 39.2 --max-zoom 16 --output /Users/jrontend/myPrj/tile_thief/beijing_baidu
 # tianditu
+<<<<<<< HEAD
+# python main.py --url https://t1.tianditu.gov.cn/DataServer?T=img_c&x={x}&y={y}&l={z}&tk=979370626f38396281484293eb175e2e \
+# --left 116.2 --bottom 39.1 --right 116.3 --top 39.2 --max-zoom 16 --output /Users/jrontend/myPrj/tile_thief/beijing_tianditu
+
+python .\src\command.py --left 116.2 --bottom 39.1 --right 116.3 --top 39.2 --max-zoom 16 --map_type google_map_sat --output ./googlesat/
+=======
 # python main.py --url https://t1.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=979370626f38396281484293eb175e2e \
 # --left 116.2 --bottom 39.1 --right 116.3 --top 39.2 --max-zoom 16 --output /Users/jrontend/myPrj/tile_thief/beijing_tianditu
+>>>>>>> master

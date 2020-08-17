@@ -3,6 +3,7 @@ import asyncio
 import time
 import tqdm
 import geojson
+import json
 from collections import namedtuple
 from types import SimpleNamespace
 
@@ -10,10 +11,17 @@ from utils.bounds2tiles import bounds2tiles
 from utils.geojson2tiles import geojson2tiles,geojson_path2tiles
 from utils.download_tile import download_tile
 from utils.tiles2mbtiles import tiles2mbtiles
+from utils.map_bing import get_bing_url
+from utils.map_tencent import get_tencent_url
+from utils.map_baidu import get_baidu_url, baidu_bounds2tiles, baidu_get_number_of_tiles_at_level
 
 SERVER_URL_MAPPING = {
     "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
-    "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}"
+    "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
+    "tianditu_sat": "http://t2.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=997487c2aa6dc93d84169f293ae2073d",
+    "bing_sat": "",
+    "tencent_sat": "",
+    "baidu_sat": ""
 }
 
 def get_bbox(coord_list):
@@ -40,6 +48,10 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
     new_opts=SimpleNamespace(**opts)
     download_tiles(new_opts)
     tiles2mbtiles(new_opts)
+
+def get_vector_info():
+    with open("./src/data/vector_list.json",'r') as load_f:
+        return json.load(load_f)
 
 def download_by_cmd(opts):
     # download
@@ -69,6 +81,15 @@ def download_tiles(opts):
             rect_bounds.right = opts.right
             rect_bounds.left = opts.left
             tiles = bounds2tiles(rect_bounds, zoom)
+        elif opts.map_type == 'baidu_sat':
+            rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
+
+            # get bounds
+            rect_bounds.top = opts.top
+            rect_bounds.bottom = opts.bottom
+            rect_bounds.right = opts.right
+            rect_bounds.left = opts.left
+            tiles = baidu_bounds2tiles(rect_bounds, zoom)
         elif opts.geojson_path != '':
             tiles = geojson_path2tiles(opts.geojson_path, zoom)
         else:
@@ -80,15 +101,25 @@ def download_tiles(opts):
             # pbar.update()
             #tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
             print(opts.map_type)
-            tile_url = SERVER_URL_MAPPING[opts.map_type]
+            tile_url=''
             x_index = tile[0]
             y_index = tile[1]
-            tile_url=tile_url.replace('{z}',str(zoom))
-            tile_url=tile_url.replace('{x}',str(x_index))
-            tile_url=tile_url.replace('{y}',str(y_index))
+            if opts.map_type == 'bing_sat':
+                tile_url=get_bing_url([x_index,y_index,zoom])
+            elif opts.map_type == 'tencent_sat':
+                tile_url=get_tencent_url([x_index,y_index,zoom])
+            elif opts.map_type == 'baidu_sat':
+                tile_url=get_baidu_url([x_index,y_index,zoom]) 
+            else:
+                tile_url = SERVER_URL_MAPPING[opts.map_type]
+                tile_url=tile_url.replace('{z}',str(zoom))
+                tile_url=tile_url.replace('{x}',str(x_index))
+                tile_url=tile_url.replace('{y}',str(y_index))
 
             path = "%s/%d/%d" % (output_dir, zoom, x_index)
             filename = path + "/%d.png" % y_index
+            if opts.map_type == 'baidu_sat':
+                filename = path + "/%d.png" % (baidu_get_number_of_tiles_at_level(zoom) - int(y_index))
             if not os.path.exists(path):
                 os.makedirs(path)
 
@@ -168,7 +199,10 @@ def download_tiles(opts):
         print("processed %d tiles - downloaded: %d, failed: %d, avg size: %d" % (processed_cnt, download_cnt, failed_cnt, avg_size))
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
 
-# download(4, 10, {
+
+# get_vector_info()
+
+# download(6, 12, {
 #       "type": "Feature",
 #       "properties": {},
 #       "geometry": {
@@ -206,4 +240,4 @@ def download_tiles(opts):
 #           ]
 #         ]
 #       }
-#     }, 'google_map_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
+#     }, 'baidu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)

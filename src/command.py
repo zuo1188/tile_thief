@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 import argparse
 import sys
-
+from utils.dem import *
 from download import download_by_cmd
 
 # ukraine top=52.483 bottom=44.056 left=22.500 right=40.430 center=(48.487, 32.915)

@@ -149,19 +149,21 @@ def download_tiles(opts):
                 print(e)
                 print("ERROR for %s" % tile_url)
 
-        def callback(result):
-            # print(result)
-            # print(result['tile_info'])
-            if result['download_status'] == 'success':
-                # download_cnt += 1
-                filename = result['tile_info']['filename']
-                data = result['data']
-                saveFile(filename, data)
-
         def taskDispatcher(download_infos):
             no_concurrent = opts.concurrent_num
             print(no_concurrent)
             pool = Pool(int(no_concurrent))
+            pbar = tqdm.tqdm(total=len(tiles))
+            def callback(result):
+                # print(result)
+                # print(result['tile_info'])
+                pbar.update()
+                if result['download_status'] == 'success':
+                    # download_cnt += 1
+                    filename = result['tile_info']['filename']
+                    data = result['data']
+                    saveFile(filename, data)
+
             for download_info_item in download_infos:
                 pool.apply_async(download_tile, args=(download_info_item,), callback=callback)
             pool.close()

@@ -15,7 +15,7 @@ from utils.tiles2mbtiles import tiles2mbtiles
 from utils.map_bing import get_bing_url, bing_get_meta_info
 from utils.map_tencent import get_tencent_url
 from utils.map_baidu import get_baidu_url, baidu_bounds2tiles, baidu_get_number_of_tiles_at_level
-
+from utils.dem import gehelper_py
 SERVER_URL_MAPPING = {
     "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
     "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
@@ -59,6 +59,20 @@ def download_by_cmd(opts):
     download_tiles(opts)
     tiles2mbtiles(opts)
 
+'''
+获取google earth历史记录时间列表
+输入：
+输出：字符串，逗号分隔
+'''
+def get_ge_history(left,bottom,right,top,zoom):
+    ge_helper = gehelper_py.CLibGEHelper()
+    ge_helper.Initialize()
+    return ge_helper.getHistoryImageDates(left, bottom, right, top, zoom)
+    
+'''
+下载google
+
+'''
 def download_tiles(opts):
     print(opts)
     output_dir = "%s" % opts.output
@@ -204,6 +218,9 @@ def download_tiles(opts):
 
 
 if __name__ == '__main__':
+
+    get_ge_history()
+    '''
     download(6, 12, {
       "type": "Feature",
       "properties": {},
@@ -244,4 +261,4 @@ if __name__ == '__main__':
       }
     }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
 # get_vector_info()
-
+'''

@@ -33,6 +33,25 @@ def get_bbox(coord_list):
         box.append((res[0][i],res[-1][i]))
     return [box[0][0], box[1][0], box[0][1], box[1][1]]
 
+def get_download_info(min_zoom, max_zoom, geometry, map_type):
+    download_info = {}
+    for zoom in range(min_zoom, max_zoom + 1):
+        if map_type == 'baidu_sat':
+            bbox = get_bbox(list(geojson.utils.coords(geometry)))
+            rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
+            # get bounds
+            rect_bounds.top = bbox[3]
+            rect_bounds.bottom = bbox[1]
+            rect_bounds.right = bbox[2]
+            rect_bounds.left = bbox[0]
+            tiles = baidu_bounds2tiles(rect_bounds, zoom)
+        else:
+            tiles = geojson2tiles(geometry, zoom) 
+        download_info['zoom' + str(zoom)] = len(tiles)
+    print(download_info)
+    return download_info
+
+
 def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
@@ -262,3 +281,42 @@ def download_tiles(opts):
 # get_vector_info()
 
 # download_vector('Azores', 'pbf', '/Users/jrontend/myPrj/tile_thief/')
+# get_download_info(6, 12, {
+#       "type": "Feature",
+#       "properties": {},
+#       "geometry": {
+#         "type": "Polygon",
+#         "coordinates": [
+#           [
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ],
+#             [
+#               116.39190673828124,
+#               39.91289633555756
+#             ],
+#             [
+#               116.22161865234376,
+#               39.8992015115692
+#             ],
+#             [
+#               116.25045776367186,
+#               39.74204232950662
+#             ],
+#             [
+#               116.49902343749999,
+#               39.716694496739876
+#             ],
+#             [
+#               116.51275634765624,
+#               39.99395569397331
+#             ],
+#             [
+#               116.39739990234375,
+#               40.01499435375046
+#             ]
+#           ]
+#         ]
+#       }
+#     }, 'tianditu_sat')

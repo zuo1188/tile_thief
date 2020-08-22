@@ -23,7 +23,9 @@ SERVER_URL_MAPPING = {
     "tianditu_sat": "http://t2.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=997487c2aa6dc93d84169f293ae2073d",
     "bing_sat": "",
     "tencent_sat": "",
-    "baidu_sat": ""
+    "baidu_sat": "",
+    "google_earth_sat": "",
+    "google_earth_dem":""
 }
 
 def get_bbox(coord_list):
@@ -50,9 +52,10 @@ def get_download_info(min_zoom, max_zoom, geometry, map_type):
         download_info['zoom' + str(zoom)] = len(tiles)
     print(download_info)
     return download_info
-
-
-def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
+'''
+date：历史影像时间，只对google earth有效 样例:"1984:12:31"
+'''
+def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,ge_date=""):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
     opts["min_zoom"]=min_zoom
@@ -66,14 +69,27 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count):
     opts["bottom"]=bbox[1]
     opts["left"]=bbox[2]
     opts["right"]=bbox[0]
+    opts["date"] = ge_date
     new_opts=SimpleNamespace(**opts)
-    download_tiles(new_opts)
+    if map_type in ["google_earth_sat","google_earth_dem"]:
+        download_ge_data(new_opts)
+    else:
+        download_tiles(new_opts)
     tiles2mbtiles(new_opts)
-
+'''
+获取OSM数据下载列表
+'''
 def get_vector_info():
     with open("./src/data/vector_list.json",'r') as load_f:
         return json.load(load_f)
 
+'''
+下载OSM矢量数据
+
+name ： 国家名
+format: shp、osm、pbf
+output：输出路径，需要先创建好
+'''
 def download_vector(name, format, output):
     with open("./src/data/vector_map.json",'r') as load_f:
         vector_mapping = json.load(load_f)
@@ -105,9 +121,31 @@ def get_ge_history(left,bottom,right,top,zoom):
     return ge_helper.getHistoryImageDates(left, bottom, right, top, zoom)
     
 '''
-下载google
+下载google数据
 
 '''
+def download_ge_data(opts):
+    ge_helper = gehelper_py.CLibGEHelper()
+    ge_helper.Initialize()
+    ge_helper.getTmDBRoot()
+    ge_helper.setCachePath(opts.output)
+    for zoom in range(opts.min_zoom,opts.max_zoom):
+        
+        
+        if opts.date != "":
+            #dowload history data
+            if opts.map_type == "google_earth_sat":
+                ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.top, opts.right, zoom,opts.date)
+            else:
+                ge_helper.getHistoryTerrainByDates(opts.left, opts.bottom, opts.top, opts.right, zoom,opts.date)
+        else:
+            #dowload latest data
+            if opts.map_type == "google_earth_sat":
+                ge_helper.getImage(opts.left, opts.bottom, opts.top, opts.right, zoom)
+            else:
+                ge_helper.getTerrain(opts.left, opts.bottom, opts.top, opts.right, zoom)
+            
+
 def download_tiles(opts):
     print(opts)
     output_dir = "%s" % opts.output
@@ -255,8 +293,9 @@ def download_tiles(opts):
 
 if __name__ == '__main__':
 
-    get_ge_history()
-    '''
+    #str_history = get_ge_history(116.13612, 39.710138, 116.657971, 40.096766,15)
+    #print(str_history)
+    
     download(6, 12, {
       "type": "Feature",
       "properties": {},
@@ -295,10 +334,9 @@ if __name__ == '__main__':
           ]
         ]
       }
-    }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
+    }, 'google_earth_sat', 'D:/test', 1)
 # get_vector_info()
-'''
-=======
+
 # if __name__ == '__main__':
 #     download(6, 12, {
 #       "type": "Feature",

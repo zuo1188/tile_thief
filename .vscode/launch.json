@@ -9,11 +9,7 @@
             "type": "python",
             "request": "launch",
             "program": "${file}",
-            "console": "integratedTerminal",
-            "args":[
-                "--top", "35.699", "--left", "139.773", "--bottom", "35.696044", "--right", "139.775981",
-                "--max-zoom","21",
-                "--output", "/Users/zuojingwei/Dev/tile_spider/tokyo"]
+            "console": "integratedTerminal"
         }
     ]
 }

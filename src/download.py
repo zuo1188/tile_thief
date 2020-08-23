@@ -67,8 +67,8 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,g
     opts["concurrent_num"]=process_count
     opts["top"]=bbox[3]
     opts["bottom"]=bbox[1]
-    opts["left"]=bbox[2]
-    opts["right"]=bbox[0]
+    opts["left"]=bbox[0]
+    opts["right"]=bbox[2]
     opts["date"] = ge_date
     new_opts=SimpleNamespace(**opts)
     if map_type in ["google_earth_sat","google_earth_dem"]:
@@ -137,15 +137,15 @@ def download_ge_data(opts):
         if opts.date != "":
             #dowload history data
             if opts.map_type == "google_earth_sat":
-                ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.top, opts.right, zoom,opts.date)
+                ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.right, opts.top, zoom,opts.date)
             else:
                 print("google earth dem only support latest dem")
         else:
             #dowload latest data
             if opts.map_type == "google_earth_sat":
-                ge_helper.getImage(opts.left, opts.bottom, opts.top, opts.right, zoom)
+                ge_helper.getImage(opts.left, opts.bottom, opts.right, opts.top, zoom)
             else:
-                ge_helper.getTerrain(opts.left, opts.bottom, opts.top, opts.right, zoom)
+                ge_helper.getTerrain(opts.left, opts.bottom, opts.right, opts.top, zoom)
             
 
 def download_tiles(opts):
@@ -295,6 +295,7 @@ def download_tiles(opts):
 
 if __name__ == '__main__':
 
+    106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250
     geometry = {
       "type": "Feature",
       "properties": {},
@@ -303,32 +304,20 @@ if __name__ == '__main__':
         "coordinates": [
           [
             [
-              116.39739990234375,
-              40.01499435375046
+              106.4753723144531250, 29.5243835449218750
             ],
             [
-              116.39190673828124,
-              39.91289633555756
+              106.4753723144531250,
+              29.5243835449218750
             ],
             [
-              116.22161865234376,
-              39.8992015115692
+              106.5769958496093750, 29.6150207519531250
             ],
             [
-              116.25045776367186,
-              39.74204232950662
+              106.5769958496093750, 29.5243835449218750
             ],
             [
-              116.49902343749999,
-              39.716694496739876
-            ],
-            [
-              116.51275634765624,
-              39.99395569397331
-            ],
-            [
-              116.39739990234375,
-              40.01499435375046
+              106.4753723144531250, 29.5243835449218750
             ]
           ]
         ]
@@ -336,8 +325,8 @@ if __name__ == '__main__':
     }
     str_history = get_ge_history(geometry,10)
     print(str_history)
-    download(9, 10,geometry, 'google_earth_dem', 'D:/test', 1)
-    #download(9, 10,geometry, 'google_earth_sat', 'D:/test', 1,"2016:12:31")
+    #download(15, 15,geometry, 'google_earth_dem', 'D:/test', 1)
+    download(9, 10,geometry, 'google_earth_sat', 'D:/test', 1,"2016:12:31")
 # get_vector_info()
 
 # if __name__ == '__main__':

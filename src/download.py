@@ -75,7 +75,7 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,g
         download_ge_data(new_opts)
     else:
         download_tiles(new_opts)
-    tiles2mbtiles(new_opts)
+        tiles2mbtiles(new_opts)
 '''
 获取OSM数据下载列表
 '''
@@ -115,10 +115,12 @@ def download_by_cmd(opts):
 输入：
 输出：字符串，逗号分隔
 '''
-def get_ge_history(left,bottom,right,top,zoom):
+def get_ge_history(geometry,zoom):
+    bbox = get_bbox(list(geojson.utils.coords(geometry)))
+    
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
-    return ge_helper.getHistoryImageDates(left, bottom, right, top, zoom)
+    return ge_helper.getHistoryImageDates(bbox[2], bbox[1], bbox[0], bbox[3], zoom)
     
 '''
 下载google数据
@@ -129,15 +131,15 @@ def download_ge_data(opts):
     ge_helper.Initialize()
     ge_helper.getTmDBRoot()
     ge_helper.setCachePath(opts.output)
-    for zoom in range(opts.min_zoom,opts.max_zoom):
+    for zoom in range(opts.min_zoom,opts.max_zoom+1):
         
-        
+        print("Downloading %d" % zoom)
         if opts.date != "":
             #dowload history data
             if opts.map_type == "google_earth_sat":
                 ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.top, opts.right, zoom,opts.date)
             else:
-                ge_helper.getHistoryTerrainByDates(opts.left, opts.bottom, opts.top, opts.right, zoom,opts.date)
+                print("google earth dem only support latest dem")
         else:
             #dowload latest data
             if opts.map_type == "google_earth_sat":
@@ -293,10 +295,7 @@ def download_tiles(opts):
 
 if __name__ == '__main__':
 
-    #str_history = get_ge_history(116.13612, 39.710138, 116.657971, 40.096766,15)
-    #print(str_history)
-    
-    download(6, 12, {
+    geometry = {
       "type": "Feature",
       "properties": {},
       "geometry": {
@@ -334,7 +333,11 @@ if __name__ == '__main__':
           ]
         ]
       }
-    }, 'google_earth_sat', 'D:/test', 1)
+    }
+    str_history = get_ge_history(geometry,10)
+    print(str_history)
+    download(9, 10,geometry, 'google_earth_dem', 'D:/test', 1)
+    #download(9, 10,geometry, 'google_earth_sat', 'D:/test', 1,"2016:12:31")
 # get_vector_info()
 
 # if __name__ == '__main__':

@@ -292,7 +292,7 @@ def download_tiles(opts):
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
 
 
-
+'''
 if __name__ == '__main__':
 
     106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250
@@ -326,49 +326,50 @@ if __name__ == '__main__':
     str_history = get_ge_history(geometry,10)
     print(str_history)
     #download(15, 15,geometry, 'google_earth_dem', 'D:/test', 1)
-    download(9, 10,geometry, 'google_earth_sat', 'D:/test', 1,"2016:12:31")
+    download(9, 10,geometry, 'google_map_sat', 'D:/test', 1,"2016:12:31")
+    '''
 # get_vector_info()
 
-# if __name__ == '__main__':
-#     download(6, 12, {
-#       "type": "Feature",
-#       "properties": {},
-#       "geometry": {
-#         "type": "Polygon",
-#         "coordinates": [
-#           [
-#             [
-#               116.39739990234375,
-#               40.01499435375046
-#             ],
-#             [
-#               116.39190673828124,
-#               39.91289633555756
-#             ],
-#             [
-#               116.22161865234376,
-#               39.8992015115692
-#             ],
-#             [
-#               116.25045776367186,
-#               39.74204232950662
-#             ],
-#             [
-#               116.49902343749999,
-#               39.716694496739876
-#             ],
-#             [
-#               116.51275634765624,
-#               39.99395569397331
-#             ],
-#             [
-#               116.39739990234375,
-#               40.01499435375046
-#             ]
-#           ]
-#         ]
-#       }
-#     }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
+if __name__ == '__main__':
+    download(6, 12, {
+      "type": "Feature",
+      "properties": {},
+      "geometry": {
+        "type": "Polygon",
+        "coordinates": [
+          [
+            [
+              116.39739990234375,
+              40.01499435375046
+            ],
+            [
+              116.39190673828124,
+              39.91289633555756
+            ],
+            [
+              116.22161865234376,
+              39.8992015115692
+            ],
+            [
+              116.25045776367186,
+              39.74204232950662
+            ],
+            [
+              116.49902343749999,
+              39.716694496739876
+            ],
+            [
+              116.51275634765624,
+              39.99395569397331
+            ],
+            [
+              116.39739990234375,
+              40.01499435375046
+            ]
+          ]
+        ]
+      }
+    }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
 # get_vector_info()
 
 # download_vector('Azores', 'pbf', '/Users/jrontend/myPrj/tile_thief/')

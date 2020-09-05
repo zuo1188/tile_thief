@@ -23,7 +23,7 @@ def state_event():
 #异步起动进程
 async def start_task(params):
     #TODO create process download()
-
+    return 1
 def cancle_task():
     return 1
 

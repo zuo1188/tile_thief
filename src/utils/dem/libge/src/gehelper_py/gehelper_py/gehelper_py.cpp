@@ -13,6 +13,7 @@ using namespace LibGE;
 BOOST_PYTHON_MODULE(gehelper_py)
 {
 	std::string(CLibGEHelper::*getImage1)(double, double, double, double, unsigned int) = &CLibGEHelper::getImage;
+	long(CLibGEHelper::*getImageNums1)(double, double, double, double, unsigned int) = &CLibGEHelper::getImageNums;
 	std::string(CLibGEHelper::*getTerrain1)(double, double, double, double, unsigned int) = &CLibGEHelper::getTerrain;
 
 	std::string(CLibGEHelper::*getHistoryImageDates1)(double, double, double, double, unsigned int) = &CLibGEHelper::getHistoryImageDates;
@@ -27,6 +28,7 @@ BOOST_PYTHON_MODULE(gehelper_py)
 		.def("Initialize", &CLibGEHelper::Initialize)
 		.staticmethod("Initialize")
 		.def("getImage", getImage1)
+		.def("getImageNums", getImageNums1)
 		.def("getTerrain", getTerrain1)
 		.def("setCachePath", setCachePath)
 		.def("getHistoryImageDates", getHistoryImageDates1)

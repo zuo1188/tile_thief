@@ -1247,6 +1247,15 @@ std::string CLibGEHelper::getHistoryImage(const char* name, const std::string &v
 	return strResponse;
 }
 
+long CLibGEHelper::getImageNums(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator) {
+	std::vector<std::string> names = ConvertToQtNode(minY, minX, maxY, maxX, level, is_mercator);
+	return names.size();
+}
+
+long CLibGEHelper::getImageNums(double minX, double minY, double maxX, double maxY, unsigned int level) {
+	return getImageNums(minX, minY, maxX, maxY, level, 256, 256, false);
+}
+
 std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator)
 {
 	std::vector<std::string> names = ConvertToQtNode(minY, minX, maxY, maxX, level, is_mercator);

@@ -41,6 +41,8 @@ public:
 	int  getTmDBRoot();
 	std::string getImage(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator = false);
 	std::string getImage(double minX, double minY, double maxX, double maxY, unsigned int level);
+	long getImageNums(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator = false);
+	long getImageNums(double minX, double minY, double maxX, double maxY, unsigned int level);
 	std::string getImage(unsigned int x, unsigned int y, unsigned level, int version, bool is_mercator = false);
 	std::string getImage(const char* name, int version, bool is_mercator = false);
 	std::string getTerrain(unsigned int x, unsigned int y, unsigned level, int version, int* pCols = nullptr, int* pRows = nullptr, bool is_mercator = false);

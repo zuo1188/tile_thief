@@ -67,6 +67,7 @@ async def serve(websocket, path):
                 data = json.loads(message)
                 if data["action"] == "progress":
                     STATE["progress"] = data["progress_value"]
+                    print(data["progress_value"])
                     #如果progress为负值说明运行出错
                     if 'user' in USERS:
                         await USERS['user'].send(message)

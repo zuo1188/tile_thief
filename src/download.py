@@ -10,13 +10,15 @@ from multiprocessing import Pool
 
 from utils.downloader import downloader
 from utils.bounds2tiles import bounds2tiles
-from utils.geojson2tiles import geojson2tiles,geojson_path2tiles
+from utils.geojson2tiles import geojson2tiles, geojson_path2tiles
 from utils.download_tile import download_tile
 from utils.tiles2mbtiles import tiles2mbtiles
 from utils.map_bing import get_bing_url, bing_get_meta_info
 from utils.map_tencent import get_tencent_url
 from utils.map_baidu import get_baidu_url, baidu_bounds2tiles, baidu_get_number_of_tiles_at_level
 from utils.dem import gehelper_py
+from utils.dem import split_geo_tool
+
 SERVER_URL_MAPPING = {
     "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
     "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
@@ -25,15 +27,17 @@ SERVER_URL_MAPPING = {
     "tencent_sat": "",
     "baidu_sat": "",
     "google_earth_sat": "",
-    "google_earth_dem":""
+    "google_earth_dem": ""
 }
+
 
 def get_bbox(coord_list):
     box = []
-    for i in (0,1):
-        res = sorted(coord_list, key=lambda x:x[i])
-        box.append((res[0][i],res[-1][i]))
+    for i in (0, 1):
+        res = sorted(coord_list, key=lambda x: x[i])
+        box.append((res[0][i], res[-1][i]))
     return [box[0][0], box[1][0], box[0][1], box[1][1]]
+
 
 def get_download_info(min_zoom, max_zoom, geometry, map_type):
     download_info = {}
@@ -47,41 +51,59 @@ def get_download_info(min_zoom, max_zoom, geometry, map_type):
             rect_bounds.right = bbox[2]
             rect_bounds.left = bbox[0]
             tiles = baidu_bounds2tiles(rect_bounds, zoom)
+        if map_type.find("google_earth") != -1:
+            bbox = get_bbox(list(geojson.utils.coords(geometry)))
+            ge_helper = gehelper_py.CLibGEHelper()
+            ge_helper.Initialize()
+            tile_nums = ge_helper.getImageNums(bbox[0], bbox[1], bbox[2], bbox[3], zoom)
         else:
-            tiles = geojson2tiles(geometry, zoom) 
-        download_info['zoom' + str(zoom)] = len(tiles)
+            tiles = geojson2tiles(geometry, zoom)
+
+        if map_type.find("google_earth") != -1:
+            download_info['zoom' + str(zoom)] = tile_nums
+        else:
+            download_info['zoom' + str(zoom)] = len(tiles)
     print(download_info)
     return download_info
+
+
 '''
 date：历史影像时间，只对google earth有效 样例:"1984:12:31"
 '''
-def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,ge_date=""):
+
+
+def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count, ge_date=""):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
-    opts["min_zoom"]=min_zoom
-    opts["max_zoom"]=max_zoom
-    opts["geojson_path"]=""
-    opts["geojson"]=geometry
-    opts["map_type"]=map_type
-    opts["output"]=output_dir
-    opts["concurrent_num"]=process_count
-    opts["top"]=bbox[3]
-    opts["bottom"]=bbox[1]
-    opts["left"]=bbox[0]
-    opts["right"]=bbox[2]
+    opts["min_zoom"] = min_zoom
+    opts["max_zoom"] = max_zoom
+    opts["geojson_path"] = ""
+    opts["geojson"] = geometry
+    opts["map_type"] = map_type
+    opts["output"] = output_dir
+    opts["concurrent_num"] = process_count
+    opts["top"] = bbox[3]
+    opts["bottom"] = bbox[1]
+    opts["left"] = bbox[0]
+    opts["right"] = bbox[2]
     opts["date"] = ge_date
-    new_opts=SimpleNamespace(**opts)
-    if map_type in ["google_earth_sat","google_earth_dem"]:
+    new_opts = SimpleNamespace(**opts)
+    if map_type in ["google_earth_sat", "google_earth_dem"]:
         download_ge_data(new_opts)
     else:
         download_tiles(new_opts)
         tiles2mbtiles(new_opts)
+
+
 '''
 获取OSM数据下载列表
 '''
+
+
 def get_vector_info():
-    with open("./src/data/vector_list.json",'r') as load_f:
+    with open("./src/data/vector_list.json", 'r') as load_f:
         return json.load(load_f)
+
 
 '''
 下载OSM矢量数据
@@ -90,8 +112,10 @@ name ： 国家名
 format: shp、osm、pbf
 output：输出路径，需要先创建好
 '''
+
+
 def download_vector(name, format, output):
-    with open("./src/data/vector_map.json",'r') as load_f:
+    with open("./src/data/vector_map.json", 'r') as load_f:
         vector_mapping = json.load(load_f)
     if name not in vector_mapping:
         print('矢量数据' + name + '不存在')
@@ -105,48 +129,60 @@ def download_vector(name, format, output):
         downloader(vector_mapping[name][format], filename)
         return True
 
+
 def download_by_cmd(opts):
     # download
     download_tiles(opts)
     tiles2mbtiles(opts)
+
 
 '''
 获取google earth历史记录时间列表
 输入：
 输出：字符串，逗号分隔
 '''
-def get_ge_history(geometry,zoom):
+
+
+def get_ge_history(geometry, zoom):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
-    
+
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
     return ge_helper.getHistoryImageDates(bbox[2], bbox[1], bbox[0], bbox[3], zoom)
-    
+
+
 '''
 下载google数据
 
 '''
+
+
 def download_ge_data(opts):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
     ge_helper.getTmDBRoot()
+    print(opts.output)
     ge_helper.setCachePath(opts.output)
-    for zoom in range(opts.min_zoom,opts.max_zoom+1):
-        
+
+    bbox = get_bbox(list(geojson.utils.coords(opts.geometry)))
+    bboxs = split_geo_tool.split_bbox(bbox, opts.min_zoom, opts.max_zoom)
+
+    for zoom in range(opts.min_zoom, opts.max_zoom + 1):
+
         print("Downloading %d" % zoom)
         if opts.date != "":
-            #dowload history data
+            # dowload history data
             if opts.map_type == "google_earth_sat":
-                ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.right, opts.top, zoom,opts.date)
+                ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.right, opts.top, zoom, opts.date)
             else:
                 print("google earth dem only support latest dem")
         else:
-            #dowload latest data
+            # dowload latest data
             if opts.map_type == "google_earth_sat":
                 ge_helper.getImage(opts.left, opts.bottom, opts.right, opts.top, zoom)
             else:
                 ge_helper.getTerrain(opts.left, opts.bottom, opts.right, opts.top, zoom)
-            
+
 
 def download_tiles(opts):
     print(opts)
@@ -185,28 +221,28 @@ def download_tiles(opts):
         elif opts.geojson_path != '':
             tiles = geojson_path2tiles(opts.geojson_path, zoom)
         else:
-            tiles = geojson2tiles(opts.geojson, zoom) 
+            tiles = geojson2tiles(opts.geojson, zoom)
 
         download_tasks = []
         for tile in tiles:
             # processed_cnt += 1
             # pbar.update()
-            #tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
+            # tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
             print(opts.map_type)
-            tile_url=''
+            tile_url = ''
             x_index = tile[0]
             y_index = tile[1]
             if opts.map_type == 'bing_sat':
-                tile_url=get_bing_url([x_index,y_index,zoom], bing_meta_info)
+                tile_url = get_bing_url([x_index, y_index, zoom], bing_meta_info)
             elif opts.map_type == 'tencent_sat':
-                tile_url=get_tencent_url([x_index,y_index,zoom])
+                tile_url = get_tencent_url([x_index, y_index, zoom])
             elif opts.map_type == 'baidu_sat':
-                tile_url=get_baidu_url([x_index,y_index,zoom]) 
+                tile_url = get_baidu_url([x_index, y_index, zoom])
             else:
                 tile_url = SERVER_URL_MAPPING[opts.map_type]
-                tile_url=tile_url.replace('{z}',str(zoom))
-                tile_url=tile_url.replace('{x}',str(x_index))
-                tile_url=tile_url.replace('{y}',str(y_index))
+                tile_url = tile_url.replace('{z}', str(zoom))
+                tile_url = tile_url.replace('{x}', str(x_index))
+                tile_url = tile_url.replace('{y}', str(y_index))
 
             path = "%s/%d/%d" % (output_dir, zoom, x_index)
             filename = path + "/%d.png" % y_index
@@ -221,7 +257,6 @@ def download_tiles(opts):
                     'tile_url': tile_url,
                     'filename': filename
                 })
-
 
         def saveFile(filename, data):
             try:
@@ -243,6 +278,7 @@ def download_tiles(opts):
             print(no_concurrent)
             pool = Pool(int(no_concurrent))
             pbar = tqdm.tqdm(total=len(tiles))
+
             def callback(result):
                 # print(result)
                 # print(result['tile_info'])
@@ -257,18 +293,19 @@ def download_tiles(opts):
                 pool.apply_async(download_tile, args=(download_info_item,), callback=callback)
             pool.close()
             pool.join()
-			# tasks = map(download_tile, download_infos)
-			# done, pending = await asyncio.wait(tasks) # 子生成器
-			# pbar = tqdm.tqdm(total=len(tiles))
-			# for r in done: # done和pending都是一个任务，所以返回结果需要逐个调用result()
-			# 	pbar.update()
-			# 	result = r.result()
-			# 	# print(result['tile_info'])
-			# 	if result['download_status'] == 'success':
-			# 		# download_cnt += 1
-			# 		filename = result['tile_info']['filename']
-			# 		data = result['data']
-			# 		saveFile(filename, data)
+
+        # tasks = map(download_tile, download_infos)
+        # done, pending = await asyncio.wait(tasks) # 子生成器
+        # pbar = tqdm.tqdm(total=len(tiles))
+        # for r in done: # done和pending都是一个任务，所以返回结果需要逐个调用result()
+        # 	pbar.update()
+        # 	result = r.result()
+        # 	# print(result['tile_info'])
+        # 	if result['download_status'] == 'success':
+        # 		# download_cnt += 1
+        # 		filename = result['tile_info']['filename']
+        # 		data = result['data']
+        # 		saveFile(filename, data)
 
         if len(download_tasks) > 0:
             start = time.time()
@@ -277,18 +314,19 @@ def download_tiles(opts):
             # print(download_tasks)
             # loop.run_until_complete(taskDispatcher(download_tasks)) # 完成事件循环，直到最后一个任务结束
             # finally:
-                # loop.close() # 结束事件循环
+            # loop.close() # 结束事件循环
             # pool = Pool(5)
             taskDispatcher(download_tasks)
-            print('所有IO任务总耗时%.5f秒' % float(time.time()-start))
-            
+            print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
+
         success_cnt = processed_cnt - failed_cnt
         avg_size = 0
         # avoid possible division by zero
         if success_cnt != 0:
             avg_size = sum_size / success_cnt
 
-        print("processed %d tiles - downloaded: %d, failed: %d, avg size: %d" % (processed_cnt, download_cnt, failed_cnt, avg_size))
+        print("processed %d tiles - downloaded: %d, failed: %d, avg size: %d" % (
+        processed_cnt, download_cnt, failed_cnt, avg_size))
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
 
 
@@ -332,43 +370,43 @@ if __name__ == '__main__':
 
 if __name__ == '__main__':
     download(6, 12, {
-      "type": "Feature",
-      "properties": {},
-      "geometry": {
-        "type": "Polygon",
-        "coordinates": [
-          [
-            [
-              116.39739990234375,
-              40.01499435375046
-            ],
-            [
-              116.39190673828124,
-              39.91289633555756
-            ],
-            [
-              116.22161865234376,
-              39.8992015115692
-            ],
-            [
-              116.25045776367186,
-              39.74204232950662
-            ],
-            [
-              116.49902343749999,
-              39.716694496739876
-            ],
-            [
-              116.51275634765624,
-              39.99395569397331
-            ],
-            [
-              116.39739990234375,
-              40.01499435375046
+        "type": "Feature",
+        "properties": {},
+        "geometry": {
+            "type": "Polygon",
+            "coordinates": [
+                [
+                    [
+                        116.39739990234375,
+                        40.01499435375046
+                    ],
+                    [
+                        116.39190673828124,
+                        39.91289633555756
+                    ],
+                    [
+                        116.22161865234376,
+                        39.8992015115692
+                    ],
+                    [
+                        116.25045776367186,
+                        39.74204232950662
+                    ],
+                    [
+                        116.49902343749999,
+                        39.716694496739876
+                    ],
+                    [
+                        116.51275634765624,
+                        39.99395569397331
+                    ],
+                    [
+                        116.39739990234375,
+                        40.01499435375046
+                    ]
+                ]
             ]
-          ]
-        ]
-      }
+        }
     }, 'tianditu_sat', '/Users/jrontend/myPrj/tile_thief/beijing_google', 1)
 # get_vector_info()
 
@@ -412,4 +450,3 @@ if __name__ == '__main__':
 #         ]
 #       }
 #     }, 'tianditu_sat')
-

@@ -119,6 +119,7 @@ example:
 ### 2.3 start_task
 #### 2.3.1 栅格数据下载
 
+- **type:** "imagery"
 - **min_zoom:** 最小缩放层级 0~22
 - **max_zoom:** 最大缩放层级 0~22
 - **geometry:** geojson格式下载范围
@@ -131,7 +132,10 @@ example:
 ```
 {
   "action":"start_task",
-  "params":{"geometry":{
+  
+  "params":{
+    "type":"imagery",
+    "geometry":{
       "type": "Feature",
       "properties": {},
       "geometry": {
@@ -161,15 +165,32 @@ example:
           ]
         ]
       }
-    },"min_zoom":3,"max_zoom":16,"map_type":"google_map_sat"}
+    },"min_zoom":3,"max_zoom":16,"map_type":"google_map_sat",
+    "process_count":3,
+    "output_dir":"/Users/zuojingwei/Dev/tile_thief/tiles/"
+    }
 }
 ```
 
 #### 2.3.2 矢量数据下载
-- **name:** 下载区域，例如"Japan"
+- **type** "vector"
+- **name:** 下载区域，例如"Angola","Japan"等
 - **format:** 下载格式，pbf 、shp、osm
-- **output:** 输出路径
+- **output_dir:** 输出路径
 
+example:
+```
+{
+  "action":"start_task",
+  "params":
+    {
+        "type":"vector",
+        "name":"Angola",
+        "format":"pbf",
+        "output_dir":"/Users/zuojingwei/Dev/tile_thief/tiles/"
+    }
+}
+```
 ### 2.4 cancle_task 
 
 中止下载，下次再启动时下载程序会检查文件是否完整，已经下载过的区域不会重复下载

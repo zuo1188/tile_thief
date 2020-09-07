@@ -34,3 +34,4 @@ src/utils/dem/libge/lib/v120/x64/release/libge.lib
 src/utils/dem/libge/lib/v120/x64/release/libge.exp
 src/utils/dem/libge/bin/v120/x64/release/gehelper_py.pyd
 src/utils/dem/libge/src/libge/libge.sdf
+venv/

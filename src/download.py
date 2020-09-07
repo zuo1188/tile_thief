@@ -7,6 +7,7 @@ import json
 from collections import namedtuple
 from types import SimpleNamespace
 from multiprocessing import Pool
+from osgeo import ogr
 
 from utils.downloader import downloader
 from utils.bounds2tiles import bounds2tiles
@@ -148,12 +149,28 @@ def get_ge_history(geometry, zoom):
     return ge_helper.getHistoryImageDates(bbox[2], bbox[1], bbox[0], bbox[3], zoom)
 
 
-'''
-下载google数据
+def judge_bbox_is_valid(bbox, geojson):
+    input_geojson_poly = ogr.CreateGeometryFromJson(geojson)
+
+    ring = ogr.Geometry(ogr.wkbLinearRing)
+    ring.AddPoint(bbox[0], bbox[1])
+    ring.AddPoint(bbox[2], bbox[1])
+    ring.AddPoint(bbox[2], bbox[3])
+    ring.AddPoint(bbox[0], bbox[3])
+    ring.AddPoint(bbox[0], bbox[1])
+
+    # Create polygon
+    poly = ogr.Geometry(ogr.wkbPolygon)
+    poly.AddGeometry(ring)
+    intersection = input_geojson_poly.Intersection(poly)
+
+    if intersection.ExportToWkt()!=None:
+        return True
+    return False
 
 '''
-
-
+下载google_earth数据
+'''
 def download_ge_data(opts):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
@@ -162,23 +179,33 @@ def download_ge_data(opts):
     ge_helper.setCachePath(opts.output)
 
     bbox = get_bbox(list(geojson.utils.coords(opts.geometry)))
-    bboxs = split_geo_tool.split_bbox(bbox, opts.min_zoom, opts.max_zoom)
+    split_zoom_level = 14
+    bboxs = split_geo_tool.split_bbox(bbox, split_zoom_level, split_zoom_level)
 
-    for zoom in range(opts.min_zoom, opts.max_zoom + 1):
-
-        print("Downloading %d" % zoom)
-        if opts.date != "":
-            # dowload history data
-            if opts.map_type == "google_earth_sat":
-                ge_helper.getHistoryImageByDates(opts.left, opts.bottom, opts.right, opts.top, zoom, opts.date)
+    str_geojson = json.dumps(opts.geometry["geometry"])
+    valid_bboxs = []
+    for bbox_splited in bboxs:
+        if judge_bbox_is_valid(bbox_splited, str_geojson):
+            valid_bboxs.append(bbox_splited)
+   
+    for bbox_splited_valid in valid_bboxs:
+        min_x =bbox_splited_valid[0]
+        min_y =bbox_splited_valid[1]
+        max_x =bbox_splited_valid[2]
+        max_y =bbox_splited_valid[3]
+        for zoom in range(opts.min_zoom, opts.max_zoom + 1):
+            if opts.date != "":
+                # dowload history data
+                if opts.map_type == "google_earth_sat":
+                    ge_helper.getHistoryImageByDates(min_x,min_y, max_x, max_y, zoom, opts.date)
+                else:
+                    print("google earth dem only support latest dem")
             else:
-                print("google earth dem only support latest dem")
-        else:
-            # dowload latest data
-            if opts.map_type == "google_earth_sat":
-                ge_helper.getImage(opts.left, opts.bottom, opts.right, opts.top, zoom)
-            else:
-                ge_helper.getTerrain(opts.left, opts.bottom, opts.right, opts.top, zoom)
+                # dowload latest data
+                if opts.map_type == "google_earth_sat":
+                    ge_helper.getImage(min_x,min_y, max_x, max_y, zoom)
+                else:
+                    ge_helper.getTerrain(min_x,min_y, max_x, max_y, zoom)
 
 
 def download_tiles(opts):

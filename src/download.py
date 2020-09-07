@@ -70,9 +70,7 @@ def get_download_info(min_zoom, max_zoom, geometry, map_type):
 '''
 date：历史影像时间，只对google earth有效 样例:"1984:12:31"
 '''
-
-
-def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count, ge_date=""):
+async def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,ge_date=""):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
     opts["min_zoom"] = min_zoom
@@ -112,10 +110,8 @@ name ： 国家名
 format: shp、osm、pbf
 output：输出路径，需要先创建好
 '''
-
-
-def download_vector(name, format, output):
-    with open("./src/data/vector_map.json", 'r') as load_f:
+async def download_vector(name, format, output):
+    with open("./src/data/vector_map.json",'r') as load_f:
         vector_mapping = json.load(load_f)
     if name not in vector_mapping:
         print('矢量数据' + name + '不存在')
@@ -126,7 +122,8 @@ def download_vector(name, format, output):
     else:
         print(vector_mapping[name][format])
         filename = output + "/%s.%s" % (name, format)
-        downloader(vector_mapping[name][format], filename)
+        coro = await downloader(vector_mapping[name][format], filename)
+        asyncio.ensure_future(coro)
         return True
 
 

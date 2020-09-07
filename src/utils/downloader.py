@@ -5,7 +5,7 @@ from logger import logger
 from tqdm import tqdm
 from .custom_request import custom_request
 
-def downloader(url, dest_filename):
+async def downloader(url, dest_filename):
     start = time.time()
     multipart_chunksize = 1024
 

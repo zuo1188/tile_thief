@@ -7,7 +7,7 @@ import json
 import logging
 import websockets
 from types import SimpleNamespace
-from download import download, get_download_info, get_ge_history, download_ge_data
+from download import download, download_vector, get_download_info, get_ge_history, download_ge_data
 
 logging.basicConfig()
 
@@ -25,8 +25,16 @@ def state_event():
 
 # 异步起动进程
 async def start_task(params):
-    # TODO create process download()
-    return 1
+    if params["type"] == "imagery":
+        # todo: 这里应该加参数校验
+        download_imagery = download(params["min_zoom"], params["max_zoom"], params["geometry"], params["map_type"],
+                                    params["output_dir"], params["process_count"])
+        asyncio.ensure_future(download_imagery)
+    elif params["type"] == "vector":
+        flag = await download_vector(params["name"], params["format"], params["output_dir"])
+        if flag == False:
+            return json.dumps({"status": -1})
+    return json.dumps({"status": 0})
 
 
 def cancle_task():
@@ -57,7 +65,8 @@ async def serve(websocket, path):
             async for message in websocket:
                 data = json.loads(message)
                 if data["action"] == "start_task":
-                    await websocket.send(start_task(data["params"]))
+                    response = await start_task(data["params"])
+                    await websocket.send(response)
                 if data["action"] == "cancle_task":
                     await websocket.send(cancle_task())
                 if data["action"] == "get_google_history":
@@ -82,7 +91,8 @@ async def serve(websocket, path):
             del USERS['worker']
 
 
-start_server = websockets.serve(serve, "localhost", 6789)
+if __name__ == '__main__':
+    start_server = websockets.serve(serve, "localhost", 6789)
 
-asyncio.get_event_loop().run_until_complete(start_server)
-asyncio.get_event_loop().run_forever()
+    asyncio.get_event_loop().run_until_complete(start_server)
+    asyncio.get_event_loop().run_forever()

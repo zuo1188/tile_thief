@@ -1,5 +1,6 @@
 # Tile Thief 网络地图下载
 基于python和c++混合开发，业务逻辑层采用python语言，google earth数据解析和下载模块采用c++语言。客户端通过websocket请求调用启动下载
+python部分开发环境vscode，c++部分 visual c++ 2013
 
 ## 1.安装
 

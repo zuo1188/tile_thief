@@ -10,7 +10,7 @@ from types import SimpleNamespace
 from multiprocessing import Pool
 from osgeo import ogr
 
-from utils.downloader import downloader
+from utils.downloader import downloader,get_vector_size
 from utils.bounds2tiles import bounds2tiles
 from utils.geojson2tiles import geojson2tiles, geojson_path2tiles
 from utils.download_tile import download_tile
@@ -67,12 +67,24 @@ def get_download_info(min_zoom, max_zoom, geometry, map_type):
             download_info['zoom' + str(zoom)] = len(tiles)
     print(download_info)
     return download_info
-
+def get_vector_count(name,format):
+    with open("./src/data/vector_map.json",'r') as load_f:
+        vector_mapping = json.load(load_f)
+    if name not in vector_mapping:
+        print('矢量数据' + name + '不存在')
+        return -1
+    elif format not in vector_mapping[name]:
+        print('矢量数据' + name + '不存在' + format + '格式')
+        return -1
+    else:
+        
+        return get_vector_size(vector_mapping[name][format])
 
 '''
 date：历史影像时间，只对google earth有效 样例:"1984:12:31"
 '''
-async def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,ge_date=""):
+def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,worker_dict=None,ge_date=""):
+    
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
     opts["min_zoom"] = min_zoom
@@ -87,6 +99,7 @@ async def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_c
     opts["left"] = bbox[0]
     opts["right"] = bbox[2]
     opts["date"] = ge_date
+    opts["worker_dict"] = worker_dict
     new_opts = SimpleNamespace(**opts)
     if map_type in ["google_earth_sat", "google_earth_dem"]:
         download_ge_data(new_opts)
@@ -112,7 +125,7 @@ name ： 国家名
 format: shp、osm、pbf
 output：输出路径，需要先创建好
 '''
-async def download_vector(name, format, output):
+def download_vector(name, format, output,worker_dict):
     with open("./src/data/vector_map.json",'r') as load_f:
         vector_mapping = json.load(load_f)
     if name not in vector_mapping:
@@ -124,8 +137,8 @@ async def download_vector(name, format, output):
     else:
         print(vector_mapping[name][format])
         filename = output + "/%s.%s" % (name, format)
-        coro = downloader(vector_mapping[name][format], filename)
-        asyncio.ensure_future(coro)
+        downloader(vector_mapping[name][format], filename,worker_dict)
+       
         return True
 
 
@@ -224,6 +237,7 @@ def download_tiles(opts):
 
     total_download_size = 0
     total_optimized_size = 0
+    opts.worker_dict["progress_value"] = 0
     for zoom in range(opts.min_zoom, opts.max_zoom + 1):
         processed_cnt = 0
         download_cnt = 0
@@ -258,7 +272,7 @@ def download_tiles(opts):
             # processed_cnt += 1
             # pbar.update()
             # tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
-            print(opts.map_type)
+            #print(opts.map_type)
             tile_url = ''
             x_index = tile[0]
             y_index = tile[1]
@@ -308,16 +322,19 @@ def download_tiles(opts):
             print(no_concurrent)
             pool = Pool(int(no_concurrent))
             pbar = tqdm.tqdm(total=len(tiles))
+           
+            
+            
 
             def callback(result):
-                # print(result)
-                # print(result['tile_info'])
+                
+                #with opts.worker_dict.get_lock():
+                opts.worker_dict["progress_value"] += 1
+                print(opts.worker_dict)
                 pbar.update()
-                # print(math.floor(pbar.format_dict["n"]/ pbar.format_dict["total"] * 100))
-                # send_process(math.floor(pbar.format_dict["n"]/ pbar.format_dict["total"] * 100))
+                
 
                 if result['download_status'] == 'success':
-                    # download_cnt += 1
                     filename = result['tile_info']['filename']
                     data = result['data']
                     saveFile(filename, data)
@@ -327,30 +344,13 @@ def download_tiles(opts):
             pool.close()
             pool.join()
 
-        # tasks = map(download_tile, download_infos)
-        # done, pending = await asyncio.wait(tasks) # 子生成器
-        # pbar = tqdm.tqdm(total=len(tiles))
-        # for r in done: # done和pending都是一个任务，所以返回结果需要逐个调用result()
-        # 	pbar.update()
-        # 	result = r.result()
-        # 	# print(result['tile_info'])
-        # 	if result['download_status'] == 'success':
-        # 		# download_cnt += 1
-        # 		filename = result['tile_info']['filename']
-        # 		data = result['data']
-        # 		saveFile(filename, data)
+       
 
         if len(download_tasks) > 0:
             start = time.time()
-            # loop = asyncio.get_event_loop()
-            # try:
-            # print(download_tasks)
-            # loop.run_until_complete(taskDispatcher(download_tasks)) # 完成事件循环，直到最后一个任务结束
-            # finally:
-            # loop.close() # 结束事件循环
-            # pool = Pool(5)
+            
             taskDispatcher(download_tasks)
-            print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
+            #print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
 
         success_cnt = processed_cnt - failed_cnt
         avg_size = 0

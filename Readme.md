@@ -68,9 +68,9 @@ example:
     },"zoom":9}}
 ``` 
 
-### 2.2 get_tile_count 
+### 2.2 get_data_count 
 给定下载范围和下载层级获取每个层级包含的瓦片数量，目前百度地图只支持矩形查询；根据瓦片数量可以大致估算出需要下载的字节大小，每个缩放等级对应的比例尺信息请参考水经注软件
-
+- **type** : 类型：“imagery”,"vector"
 - **min_zoom** : 最小缩放层级 0~22
 
 - **max_zoom** : 最大缩放层级 0~22
@@ -82,7 +82,7 @@ example:
 example:
 ```
 {
-  "action":"get_tile_count",
+  "action":"get_data_count",
   "params":{"geometry":{
       "type": "Feature",
       "properties": {},
@@ -113,7 +113,27 @@ example:
           ]
         ]
       }
-    },"min_zoom":3,"max_zoom":16,"map_type":"google_map_sat"}}
+    },"min_zoom":3,"max_zoom":16,"type":imagery,"map_type":"google_map_sat"}}
+```
+
+
+获取矢量数据大小example：
+
+```
+{
+  "action":"get_data_count",
+  "params":
+    {
+        "type":"vector",
+        "name":"Angola",
+        "format":"pbf"
+    }
+}
+```
+矢量数据大小按照字节数返回:
+
+```
+{"vector_size": 54197391}
 ```
 
 ### 2.3 start_task
@@ -203,17 +223,21 @@ example
 }
 ```
 #### 2.5 进度条更新
-任务创建成功后，服务端会持续推送任务进度信息到client端，请使用websocket接收消息
+客户端定期调用接口，根据pid获取任务进度。
 
-**action:** 字符串 "progress"
-
-**progress_value:** 数值，0~100 代表进度百分比，如出现异常返回负值
-
-example：
-
+瓦片下载任务返回瓦片下载个数，google earth下载任务返回已完成区块个数，矢量数据返回已完成字节数。
+请求示例:
+**action:** 字符串 "get_progress"
 ```
 {
-  "action":"progress",
+  "action":"get_progress",
+  "pid": 78749
+}
+```
+返回 example：
+如果"progress_value"为负值代表异常
+```
+{
   "progress_value":"90"
 }
 ```

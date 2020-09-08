@@ -21,7 +21,7 @@ def download_tile(download_tasks):
     for try_nr in range(1, max_retries + 2):
         #for try_nr in range(1, 2):
         try:
-            print("trying %s" % tile_url)
+            #print("trying %s" % tile_url)
             webFile = requests.get(tile_url, headers=REQUEST_HEADERS)
             data = webFile.content
             download_succeeded = True

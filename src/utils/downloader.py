@@ -4,8 +4,16 @@ import os
 from logger import logger
 from tqdm import tqdm
 from .custom_request import custom_request
+def get_vector_size(url):
+    # 获取文件的大小
+    r = custom_request('HEAD', url, info='header message')
+    if not r:  # 请求失败时，r 为 None
+        logger.error('Failed to get header message on URL [{}]'.format(url))
+        return -1
+    file_size = int(r.headers['Content-Length'])
+    return  file_size
 
-async def downloader(url, dest_filename):
+def downloader(url, dest_filename,worker_dict):
     start = time.time()
     multipart_chunksize = 1024
 
@@ -42,6 +50,7 @@ async def downloader(url, dest_filename):
                 if chunk:
                     fp.write(chunk)
                     bar.update(len(chunk))
+                    worker_dict["progress_value"] += len(chunk)
                 
     # 整个文件内容被成功下载后，将临时文件名修改回正式文件名
     if os.path.getsize(temp_filename) == file_size:  # 以防网络故障

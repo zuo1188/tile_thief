@@ -4,6 +4,7 @@ import time
 import tqdm
 import geojson
 import json
+import math
 from collections import namedtuple
 from types import SimpleNamespace
 from multiprocessing import Pool
@@ -123,7 +124,7 @@ async def download_vector(name, format, output):
     else:
         print(vector_mapping[name][format])
         filename = output + "/%s.%s" % (name, format)
-        coro = await downloader(vector_mapping[name][format], filename)
+        coro = downloader(vector_mapping[name][format], filename)
         asyncio.ensure_future(coro)
         return True
 
@@ -307,6 +308,9 @@ def download_tiles(opts):
                 # print(result)
                 # print(result['tile_info'])
                 pbar.update()
+                # print(math.floor(pbar.format_dict["n"]/ pbar.format_dict["total"] * 100))
+                # send_process(math.floor(pbar.format_dict["n"]/ pbar.format_dict["total"] * 100))
+
                 if result['download_status'] == 'success':
                     # download_cnt += 1
                     filename = result['tile_info']['filename']

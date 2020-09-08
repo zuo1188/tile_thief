@@ -330,7 +330,6 @@ def download_tiles(opts):
                 
                 #with opts.worker_dict.get_lock():
                 opts.worker_dict["progress_value"] += 1
-                print(opts.worker_dict)
                 pbar.update()
                 
 

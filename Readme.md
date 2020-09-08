@@ -113,7 +113,7 @@ example:
           ]
         ]
       }
-    },"min_zoom":3,"max_zoom":16,"type":imagery,"map_type":"google_map_sat"}}
+    },"min_zoom":3,"max_zoom":16,"type":"imagery","map_type":"google_map_sat"}}
 ```
 
 
@@ -137,6 +137,8 @@ example:
 ```
 
 ### 2.3 start_task
+
+**下载完成后记得调用cancle_task杀掉下载进程**
 #### 2.3.1 栅格数据下载
 
 - **type:** "imagery"

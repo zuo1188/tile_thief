@@ -107,19 +107,6 @@ async def serve(websocket, path):
                     await websocket.send(get_progress(data["pid"]))
         finally:
             del USERS['user']
-    if path == "/worker":
-        USERS['worker'] = websocket
-        try:
-            async for message in websocket:
-                data = json.loads(message)
-                if data["action"] == "progress":
-                    STATE["progress"] = data["progress_value"]
-                    print(data["progress_value"])
-                    #如果progress为负值说明运行出错
-                    if 'user' in USERS:
-                        await USERS['user'].send(message)
-        finally:
-            del USERS['worker']
 
 
 if __name__ == '__main__':

@@ -187,7 +187,9 @@ def download_ge_data(opts):
     for bbox_splited in bboxs:
         if judge_bbox_is_valid(bbox_splited, str_geojson):
             valid_bboxs.append(bbox_splited)
-   
+
+    total_task_num = len(valid_bboxs)
+    finished_task_num = 0
     for bbox_splited_valid in valid_bboxs:
         min_x =bbox_splited_valid[0]
         min_y =bbox_splited_valid[1]
@@ -206,6 +208,9 @@ def download_ge_data(opts):
                     ge_helper.getImage(min_x,min_y, max_x, max_y, zoom)
                 else:
                     ge_helper.getTerrain(min_x,min_y, max_x, max_y, zoom)
+
+        finished_task_num += 1
+        print('finished: {:.0%}'.format(finished_task_num/total_task_num))
 
 
 def download_tiles(opts):

@@ -41,32 +41,32 @@ def get_bbox(coord_list):
     return [box[0][0], box[1][0], box[0][1], box[1][1]]
 
 
-def get_download_info(min_zoom, max_zoom, geometry, map_type):
-    download_info = {}
-    for zoom in range(min_zoom, max_zoom + 1):
-        if map_type == 'baidu_sat':
-            bbox = get_bbox(list(geojson.utils.coords(geometry)))
-            rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
-            # get bounds
-            rect_bounds.top = bbox[3]
-            rect_bounds.bottom = bbox[1]
-            rect_bounds.right = bbox[2]
-            rect_bounds.left = bbox[0]
-            tiles = baidu_bounds2tiles(rect_bounds, zoom)
-        if map_type.find("google_earth") != -1:
-            bbox = get_bbox(list(geojson.utils.coords(geometry)))
-            ge_helper = gehelper_py.CLibGEHelper()
-            ge_helper.Initialize()
-            tile_nums = ge_helper.getImageNums(bbox[0], bbox[1], bbox[2], bbox[3], zoom)
-        else:
-            tiles = geojson2tiles(geometry, zoom)
+def get_Imagery_count(min_zoom, max_zoom, geometry, map_type):
+    
+    if map_type.find("google_earth") != -1:
+        ge_count = get_ge_count(min_zoom,max_zoom,geometry)
+        return {"ge_count":ge_count}
+    else:
+        download_info = {}
+        for zoom in range(min_zoom, max_zoom + 1):
+            if map_type == 'baidu_sat':
+                bbox = get_bbox(list(geojson.utils.coords(geometry)))
+                rect_bounds = namedtuple('RectBounds', ['top', 'left', 'bottom', 'right'])
+                # get bounds
+                rect_bounds.top = bbox[3]
+                rect_bounds.bottom = bbox[1]
+                rect_bounds.right = bbox[2]
+                rect_bounds.left = bbox[0]
+                tiles = baidu_bounds2tiles(rect_bounds, zoom)
+            
+            
+            else:
+                tiles = geojson2tiles(geometry, zoom)
 
-        if map_type.find("google_earth") != -1:
-            download_info['zoom' + str(zoom)] = tile_nums
-        else:
+            
             download_info['zoom' + str(zoom)] = len(tiles)
-    print(download_info)
-    return download_info
+        print(download_info)
+        return download_info
 def get_vector_count(name,format):
     with open("./src/data/vector_map.json",'r') as load_f:
         vector_mapping = json.load(load_f)
@@ -182,6 +182,25 @@ def judge_bbox_is_valid(bbox, geojson):
         return True
     return False
 
+def get_ge_count(min_zoom,max_zoom,geometry):
+    ge_helper = gehelper_py.CLibGEHelper()
+    ge_helper.Initialize()
+    ge_helper.getTmDBRoot()
+   
+
+    bbox = get_bbox(list(geojson.utils.coords(geometry)))
+    split_zoom_level = 14
+    bboxs = split_geo_tool.split_bbox(bbox, split_zoom_level, split_zoom_level)
+
+    str_geojson = json.dumps(geometry["geometry"])
+    valid_bboxs = []
+    for bbox_splited in bboxs:
+        if judge_bbox_is_valid(bbox_splited, str_geojson):
+            valid_bboxs.append(bbox_splited)
+
+    total_task_num = len(valid_bboxs)
+    return total_task_num
+
 '''
 下载google_earth数据
 '''
@@ -192,18 +211,18 @@ def download_ge_data(opts):
     print(opts.output)
     ge_helper.setCachePath(opts.output)
 
-    bbox = get_bbox(list(geojson.utils.coords(opts.geometry)))
+    bbox = get_bbox(list(geojson.utils.coords(opts.geojson)))
     split_zoom_level = 14
     bboxs = split_geo_tool.split_bbox(bbox, split_zoom_level, split_zoom_level)
 
-    str_geojson = json.dumps(opts.geometry["geometry"])
+    str_geojson = json.dumps(opts.geojson["geometry"])
     valid_bboxs = []
     for bbox_splited in bboxs:
         if judge_bbox_is_valid(bbox_splited, str_geojson):
             valid_bboxs.append(bbox_splited)
 
     total_task_num = len(valid_bboxs)
-    finished_task_num = 0
+    opts.worker_dict["progress_value"] = 0
     for bbox_splited_valid in valid_bboxs:
         min_x =bbox_splited_valid[0]
         min_y =bbox_splited_valid[1]
@@ -223,8 +242,8 @@ def download_ge_data(opts):
                 else:
                     ge_helper.getTerrain(min_x,min_y, max_x, max_y, zoom)
 
-        finished_task_num += 1
-        print('finished: {:.0%}'.format(finished_task_num/total_task_num))
+        opts.worker_dict["progress_value"] += 1
+        #print(opts.worker_dict["progress_value"])
 
 
 def download_tiles(opts):

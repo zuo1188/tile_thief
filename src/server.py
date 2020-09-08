@@ -7,7 +7,7 @@ import json
 import logging
 import websockets
 from types import SimpleNamespace
-from download import download, download_vector, get_download_info, get_ge_history, download_ge_data, get_vector_count
+from download import download, download_vector, get_Imagery_count, get_ge_history, download_ge_data, get_vector_count
 from multiprocessing import Process,Manager
 import psutil
 import signal
@@ -39,7 +39,7 @@ async def start_task(params):
         if "date" in params:
             dt = params["date"]
         else:
-            dt = None
+            dt = ""
         p_worker = Process(target=download,args=[params["min_zoom"], params["max_zoom"], params["geometry"], params["map_type"],params["output_dir"], params["process_count"],worker_dict,dt])
         p_worker.start()
         workers[p_worker.pid] = {}
@@ -71,7 +71,7 @@ def get_google_history(geometry, zoom):
 def get_data_count(params):
     #图像以瓦片为单位
     if params["type"] == "imagery":
-        output = get_download_info(params["min_zoom"], params["max_zoom"], params["geometry"], params["map_type"])
+        output = get_Imagery_count(params["min_zoom"], params["max_zoom"], params["geometry"], params["map_type"])
     #矢量数据以字节为单位
     elif params["type"] == "vector":
         vec_size = get_vector_count(params["name"], params["format"])

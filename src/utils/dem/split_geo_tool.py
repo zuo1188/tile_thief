@@ -73,7 +73,7 @@ def split_bbox(bbox, minZoom=1,maxZoom=18):
                 l0 = gprj.fromPixelToLL(p0, z);
                 l1 = gprj.fromPixelToLL(p1, z);
 
-                print(l0, l1)
+                #print(l0, l1)
                 bboxs.append((l0[0], l0[1], l1[0], l1[1]))
 
     return bboxs

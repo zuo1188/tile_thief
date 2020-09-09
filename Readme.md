@@ -234,14 +234,14 @@ example
 ```
 {
   "action":"get_progress",
-  "pid": 78749
+  "pid": [123,456]
 }
 ```
 返回 example：
 如果"progress_value"为负值代表异常
 ```
 {
-  "progress_value":"90"
+  123:90,456:100
 }
 ```
 

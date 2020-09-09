@@ -80,11 +80,13 @@ def get_data_count(params):
 
 
 
-def get_progress(pid):
-    if pid in workers:
-        return json.dumps({"progress_value":workers[pid]["data"]["progress_value"]})
-    else :
-        return json.dumps({"progress_value":-1})
+def get_progress(pids):
+    output = {}
+    for pid in pids:
+        if pid in workers:
+            output[pid]=workers[pid]["data"]["progress_value"]
+    
+    return json.dumps(output)
 
 async def serve(websocket, path):
     if path == "/user":

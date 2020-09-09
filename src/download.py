@@ -13,7 +13,7 @@ from osgeo import ogr
 from utils.downloader import downloader,get_vector_size
 from utils.bounds2tiles import bounds2tiles
 from utils.geojson2tiles import geojson2tiles, geojson_path2tiles
-from utils.download_tile import download_tile
+from utils.download_tile import download_tile, download_ge_tile
 from utils.tiles2mbtiles import tiles2mbtiles
 from utils.map_bing import get_bing_url, bing_get_meta_info
 from utils.map_tencent import get_tencent_url
@@ -205,11 +205,11 @@ def get_ge_count(min_zoom,max_zoom,geometry):
 下载google_earth数据
 '''
 def download_ge_data(opts):
-    ge_helper = gehelper_py.CLibGEHelper()
-    ge_helper.Initialize()
-    ge_helper.getTmDBRoot()
-    print(opts.output)
-    ge_helper.setCachePath(opts.output)
+    # ge_helper = gehelper_py.CLibGEHelper()
+    # ge_helper.Initialize()
+    # ge_helper.getTmDBRoot()
+    # print(opts.output)
+    # ge_helper.setCachePath(opts.output)
 
     bbox = get_bbox(list(geojson.utils.coords(opts.geojson)))
     split_zoom_level = 14
@@ -223,27 +223,40 @@ def download_ge_data(opts):
 
     total_task_num = len(valid_bboxs)
     opts.worker_dict["progress_value"] = 0
-    for bbox_splited_valid in valid_bboxs:
-        min_x =bbox_splited_valid[0]
-        min_y =bbox_splited_valid[1]
-        max_x =bbox_splited_valid[2]
-        max_y =bbox_splited_valid[3]
-        for zoom in range(opts.min_zoom, opts.max_zoom + 1):
-            if opts.date != "":
-                # dowload history data
-                if opts.map_type == "google_earth_sat":
-                    ge_helper.getHistoryImageByDates(min_x,min_y, max_x, max_y, zoom, opts.date)
-                else:
-                    print("google earth dem only support latest dem")
-            else:
-                # dowload latest data
-                if opts.map_type == "google_earth_sat":
-                    ge_helper.getImage(min_x,min_y, max_x, max_y, zoom)
-                else:
-                    ge_helper.getTerrain(min_x,min_y, max_x, max_y, zoom)
 
-        opts.worker_dict["progress_value"] += 1
-        #print(opts.worker_dict["progress_value"])
+    download_tasks = []
+    for bbox_splited_valid in valid_bboxs:
+        download_tasks.append({
+            'bbox': bbox_splited_valid,
+            'min_zoom': opts.min_zoom,
+            'max_zoom': opts.max_zoom,
+            'date': opts.date,
+            'map_type': opts.map_type,
+            'output': opts.output
+        })
+
+    def taskDispatcher(download_infos):
+        no_concurrent = opts.concurrent_num
+        print(no_concurrent)
+        pool = Pool(int(no_concurrent))
+        pbar = tqdm.tqdm(total=len(valid_bboxs))
+
+        def callback(result):
+            opts.worker_dict["progress_value"] += 1
+            pbar.update()
+
+        for download_info_item in download_infos:
+            pool.apply_async(download_ge_tile, args=(download_info_item,), callback=callback)
+
+        pool.close()
+        pool.join()
+
+
+
+    if len(download_tasks) > 0:
+        start = time.time()
+        taskDispatcher(download_tasks)
+        #print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
 
 
 def download_tiles(opts):

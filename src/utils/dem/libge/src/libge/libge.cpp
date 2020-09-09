@@ -582,7 +582,7 @@ int  CLibGEHelper::getDBRoot()
 		return false;
 
 	_version = _version ^ 0x4200;
-	printf("magic:%X  unk:%X  version: %X\r\n", _magic, _unk, _version);
+	//printf("magic:%X  unk:%X  version: %X\r\n", _magic, _unk, _version);
 
 	std::string strXML = UnPackGEZlib(data, len - 1024);
 	if (!strXML.empty())
@@ -673,7 +673,7 @@ int  CLibGEHelper::getTmDBRoot()
 		return false;
 
 	_tm_version = _tm_version ^ 0x4200;
-	printf("magic:%X  unk:%X  version: %X\r\n", _magic, _unk, _tm_version);
+	//printf("magic:%X  unk:%X  version: %X\r\n", _magic, _unk, _tm_version);
 
 	std::string strXML = UnPackGEZlib(data, len - 1024);
 	if (!strXML.empty())

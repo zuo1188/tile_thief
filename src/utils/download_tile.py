@@ -1,10 +1,12 @@
 import time
 import requests
 import os
+from utils.dem import gehelper_py
 
 REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
 }
+
 
 def download_tile(download_tasks):
     # print(download_tasks) 
@@ -19,9 +21,9 @@ def download_tile(download_tasks):
         max_retries = 1
 
     for try_nr in range(1, max_retries + 2):
-        #for try_nr in range(1, 2):
+        # for try_nr in range(1, 2):
         try:
-            #print("trying %s" % tile_url)
+            # print("trying %s" % tile_url)
             webFile = requests.get(tile_url, headers=REQUEST_HEADERS)
             data = webFile.content
             download_succeeded = True
@@ -38,6 +40,46 @@ def download_tile(download_tasks):
         return {'download_status': 'error', 'tile_info': download_tasks}
     else:
         return {'download_status': 'success', 'tile_info': download_tasks, 'data': data}
+
+
+def download_ge_tile(download_tasks):
+    # print(download_tasks)
+    download_succeeded = False
+    bbox = download_tasks['bbox']
+    min_x = bbox[0]
+    min_y = bbox[1]
+    max_x = bbox[2]
+    max_y = bbox[3]
+
+    min_zoom = download_tasks['min_zoom']
+    max_zoom = download_tasks['max_zoom']
+    date = download_tasks['date']
+    map_type = download_tasks['map_type']
+    output = download_tasks['output']
+    # ge_helper = download_tasks['ge_helper']
+
+    ge_helper = gehelper_py.CLibGEHelper()
+    ge_helper.Initialize()
+    ge_helper.getTmDBRoot()
+    # print(output)
+    ge_helper.setCachePath(output)
+
+    for zoom in range(min_zoom, max_zoom + 1):
+        if date != "":
+            # dowload history data
+            if map_type == "google_earth_sat":
+                ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
+            else:
+                print("google earth dem only support latest dem")
+        else:
+            # dowload latest data
+            if map_type == "google_earth_sat":
+                ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
+            else:
+                ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
+
+    return {'download_status': 'success', 'tile_info': download_tasks}
+
 
 # async def taskDispatcher(download_tasks): # 调用方
 #     tasks = map(download, download_tasks)

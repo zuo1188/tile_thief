@@ -1618,7 +1618,6 @@ std::string CLibGEHelper::getHistoryImageDates(double minX, double minY, double 
 }
 
 std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double maxY, unsigned int level) {
-	std::cout << "_cachePath : " << _cachePath << std::endl;
 	return getImage(minX, minY, maxX, maxY, level, 256, 256, false);
 }
 

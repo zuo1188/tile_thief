@@ -1963,9 +1963,9 @@ std::string CLibGEHelper::getFlatfile(const std::string& url, const std::string&
 	if (strResponse.empty())
 	{
 		int res = Get(url, strResponse, true);
-#ifdef _DEBUG
+//#ifdef _DEBUG
 		printf("getFlatfile %s: %s\r\n", ((res == CURLE_OK && !strResponse.empty()) ? "Success" : "Failed"), url.c_str());
-#endif
+//#endif
 		if (res != CURLE_OK)
 			return "";
 

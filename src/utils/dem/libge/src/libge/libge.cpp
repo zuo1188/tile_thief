@@ -1683,7 +1683,7 @@ std::string CLibGEHelper::getTerrain(const char* name, int version, int* pCols, 
 			ssEncodePath << "\\" << x;
 			_mkdir(ssEncodePath.str().c_str());
 
-			ssEncodePath << "\\" << y << ".tif";
+			ssEncodePath << "\\" << y << ".tif";    
 
 			std::string strPrj;
 			if (is_mercator)

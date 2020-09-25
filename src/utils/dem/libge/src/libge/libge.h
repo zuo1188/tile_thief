@@ -5,9 +5,11 @@
 
 #include "export.h"
 #include <assert.h>
+#include <direct.h>
 #include <string>
 #include <set>
 #include <vector>
+#include <iostream>
 #include "QuadTreePacket.h"
 #include "Terrain.h"
 #include "CacheManager.h"
@@ -34,7 +36,11 @@ public:
 
 public:
 	std::string cachePath() { return _cachePath; }
-	void cachePath(const std::string& path) { _cachePath = path; }
+	void cachePath(const std::string& path) { 
+		std::cout << "mkdir " << path << std::endl;
+		_mkdir(path.c_str());
+		_cachePath = path; 
+	}
 
 public:
 	int  getDBRoot();

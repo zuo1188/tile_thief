@@ -1,6 +1,17 @@
 import requests
 from logger import logger
-
+import base64
+import datetime
+def check_key(text):
+    out = base64.b64decode(text)
+    out = out.decode('ascii')
+    now = datetime.datetime.now()
+    str_date = now.strftime('%x')
+    if str_date != out:
+        print("license key error")
+        return False
+    else:
+        return True
 
 def custom_request(method, url, info='common url', *args, **kwargs):
     '''捕获 requests.request() 方法的异常，比如连接超时、被拒绝等

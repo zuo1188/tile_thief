@@ -1292,6 +1292,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 
 	std::string allName;
 	bool firstDS = true;
+	bool is_all_ok = true;
 	for (int i = 0; i < names.size(); i++)
 	{
 		std::string name = names.at(i);
@@ -1311,8 +1312,11 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		}
 		//
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
-		if (imgData.size() <= 0)
+		if (imgData.size() <= 0) {
+			std::cout << "get " << name << " failed" << std::endl;
+			is_all_ok = false;
 			continue;
+		}
 
 		double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
 		unsigned int tmplevel;
@@ -1436,7 +1440,11 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	}
 	}
 	GDALClose(hVRTDS);*/
-	return "";
+	if (is_all_ok) {
+		return "ok";
+	}
+	//
+	return "error";
 	//return imgData;
 }
 
@@ -1510,6 +1518,7 @@ std::string CLibGEHelper::getHistoryImageByDates(double minX, double minY, doubl
 
 	std::string hex_date;
 	std::map<std::string, std::string> map_res;
+	bool is_all_ok = true;
 	for (int i = 0; i < names.size(); i++)
 	{
 		std::string name = names.at(i);
@@ -1558,12 +1567,16 @@ std::string CLibGEHelper::getHistoryImageByDates(double minX, double minY, doubl
 					continue;
 				}
 				//
-				getHistoryImage(single_img_info[0].c_str(), single_img_info[3], single_img_info[2], false);
+				std::string ret = getHistoryImage(single_img_info[0].c_str(), single_img_info[3], single_img_info[2], false);
+				if (ret == "") {
+					is_all_ok = false;
+				}
 			}
 		}
 	}
 	//
-	return "";
+	if (!is_all_ok) return "error";
+	return "ok";
 }
 
 std::string CLibGEHelper::getHistoryImageDates(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator)
@@ -1761,6 +1774,7 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 	std::vector<std::string> vtMemFiles;
 	std::string allName;
 	bool firstDS = true;
+	bool is_all_ok = true;
 	for (int i = 0; i < names.size(); i++)
 	{
 		std::string name = names.at(i);
@@ -1783,8 +1797,10 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 		int nCols = 0;
 		int nRows = 0;
 		std::string imgData = getTerrain(name.c_str(), 0, &nCols, &nRows, is_mercator);
-		if (imgData.size() <= 0)
+		if (imgData.size() <= 0) {
+			is_all_ok = false;
 			continue;
+		}
 
 		//double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
 		//unsigned int tmplevel;
@@ -1887,7 +1903,7 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 
 	for (int i = 0; i < vtMemFiles.size(); i++)
 		VSIUnlink(vtMemFiles[i].c_str());
-	return imgData;
+	return is_all_ok ? "ok" : "error";
 }
 
 

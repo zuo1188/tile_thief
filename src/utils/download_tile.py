@@ -69,17 +69,26 @@ def download_ge_tile(download_tasks):
             # dowload history data
             if map_type == "google_earth_sat":
                 print("start ge_helper.getHistoryImageByDates %f,%f,%f,%f zoom:%d date:%s" % (min_x, min_y, max_x, max_y, zoom, date) )
-                ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
+                ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
+                while ret != "ok" and zoom >= 0:
+                    zoom -= 1
+                    ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
             else:
                 print("google earth dem only support latest dem")
         else:
             # dowload latest data
             if map_type == "google_earth_sat":
                 print("start ge_helper.getImage %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom) )
-                ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
+                ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
+                while ret!="ok" and zoom>=0:
+                    zoom -= 1
+                    ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
             else:
                 print("start ge_helper.getTerrain %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom) )
-                ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
+                ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
+                while ret != "ok" and zoom >= 0:
+                    zoom -= 1
+                    ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
 
     return {'download_status': 'success', 'tile_info': download_tasks}
 

@@ -16,7 +16,6 @@ def get_vector_size(url):
 def downloader(url, dest_filename,worker_dict):
     start = time.time()
     multipart_chunksize = 1024
-
      # 如果没有指定本地保存时的文件名，则默认使用 URL 中最后一部分作为文件名
     official_filename = dest_filename if dest_filename else url.split('/')[-1]  # 正式文件名
     temp_filename = official_filename + '.swp'  # 没下载完成时，临时文件名

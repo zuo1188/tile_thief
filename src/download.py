@@ -20,7 +20,7 @@ from utils.map_tencent import get_tencent_url
 from utils.map_baidu import get_baidu_url, baidu_bounds2tiles, baidu_get_number_of_tiles_at_level
 from utils.dem import gehelper_py
 from utils.dem import split_geo_tool
-
+from utils.custom_request import custom_request,check_key
 SERVER_URL_MAPPING = {
     "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
     "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
@@ -100,6 +100,13 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,w
     opts["right"] = bbox[2]
     opts["date"] = ge_date
     opts["worker_dict"] = worker_dict
+    
+    resp = custom_request("GET","http://meimeimap.cn:8002/getkey")
+    if resp:
+        if not check_key(resp.text):
+            return
+    else:
+        return 
     new_opts = SimpleNamespace(**opts)
     if map_type in ["google_earth_sat", "google_earth_dem"]:
         download_ge_data(new_opts)

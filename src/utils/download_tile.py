@@ -61,8 +61,8 @@ def download_ge_tile(download_tasks):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
     ge_helper.getTmDBRoot()
-    # print(output)
-    ge_helper.setCachePath(output)
+    output_gbk = output.encode("gbk")
+    ge_helper.setCachePath(output_gbk)
 
     for zoom in range(min_zoom, max_zoom + 1):
         if date != "":

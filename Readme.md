@@ -222,7 +222,7 @@ example
 
 ```
 {
-  "action":"cancle_task"
+  "action":"cancle_task","pid":12744
 }
 ```
 #### 2.5 进度条更新

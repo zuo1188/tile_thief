@@ -1088,6 +1088,7 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 		if (version <= 0)
 			return "get_version_failed";
 	}
+	std::cout << "version :" << version << std::endl;
 
 	std::stringstream ssUrl;
 	std::stringstream ssKey;
@@ -1313,6 +1314,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		//
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
+			std::cout << "get_version_failed" << std::endl;
 			return "error";
 		}
 		//

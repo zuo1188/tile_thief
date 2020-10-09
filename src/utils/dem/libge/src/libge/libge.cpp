@@ -1086,7 +1086,7 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	{
 		version = getVersion(name, CacheManager::TYPE_IMAGE);
 		if (version <= 0)
-			return "";
+			return "get_version_failed";
 	}
 
 	std::stringstream ssUrl;
@@ -1312,6 +1312,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		}
 		//
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
+		if (imgData == "get_version_failed") {
+			return "error";
+		}
+		//
 		if (imgData.size() <= 0) {
 			std::cout << "get " << name << " failed" << std::endl;
 			is_all_ok = false;
@@ -1568,6 +1572,10 @@ std::string CLibGEHelper::getHistoryImageByDates(double minX, double minY, doubl
 				}
 				//
 				std::string ret = getHistoryImage(single_img_info[0].c_str(), single_img_info[3], single_img_info[2], false);
+				if (ret == "get_version_failed") {
+					return "error";
+				}
+				//
 				if (ret == "") {
 					is_all_ok = false;
 				}
@@ -1654,7 +1662,7 @@ std::string CLibGEHelper::getTerrain(const char* name, int version, int* pCols, 
 	{
 		version = getVersion(newName.c_str(), CacheManager::TYPE_TERRAIN);
 		if (version <= 0)
-			return "";
+			return "get_version_failed";
 	}
 
 	std::stringstream ssUrl;
@@ -1797,6 +1805,10 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 		int nCols = 0;
 		int nRows = 0;
 		std::string imgData = getTerrain(name.c_str(), 0, &nCols, &nRows, is_mercator);
+		if (imgData == "get_version_failed") {
+			return "error";
+		}
+
 		if (imgData.size() <= 0) {
 			is_all_ok = false;
 			continue;

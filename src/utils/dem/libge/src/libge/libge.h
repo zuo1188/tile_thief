@@ -44,7 +44,7 @@ public:
 
 public:
 	int  getDBRoot();
-	int  getTmDBRoot();
+	bool getTmDBRoot();
 	std::string getImage(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator = false);
 	std::string getImage(double minX, double minY, double maxX, double maxY, unsigned int level);
 	long getImageNums(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator = false);

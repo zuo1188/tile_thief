@@ -56,11 +56,15 @@ def download_ge_tile(download_tasks):
     date = download_tasks['date']
     map_type = download_tasks['map_type']
     output = download_tasks['output']
-    # ge_helper = download_tasks['ge_helper']
 
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
-    ge_helper.getTmDBRoot()
+    if not ge_helper.getTmDBRoot():
+        message = "Your IP may be blocked by google, Please check!"
+        print(message)
+        download_tasks["message"] = message
+        return {'download_status': 'failed', 'tile_info': download_tasks}
+
     output_gbk = output.encode("gbk")
     ge_helper.setCachePath(output_gbk)
 
@@ -68,30 +72,39 @@ def download_ge_tile(download_tasks):
         if date != "":
             # dowload history data
             if map_type == "google_earth_sat":
-                print("start ge_helper.getHistoryImageByDates %f,%f,%f,%f zoom:%d date:%s" % (min_x, min_y, max_x, max_y, zoom, date) )
+                print("start ge_helper.getHistoryImageByDates %f,%f,%f,%f zoom:%d date:%s" % (
+                min_x, min_y, max_x, max_y, zoom, date))
                 ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
+                if ret != "ok":
+                    download_tasks["message"] = ret
+                    return {'download_status': 'failed', 'tile_info': download_tasks}
             else:
                 print("google earth dem only support latest dem")
         else:
             # dowload latest data
             if map_type == "google_earth_sat":
-                print("start ge_helper.getImage %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom) )
+                print("start ge_helper.getImage %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
-                while ret!="ok" and zoom>=0:
+                while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
+                if ret != "ok":
+                    download_tasks["message"] = ret
+                    return {'download_status': 'failed', 'tile_info': download_tasks}
             else:
-                print("start ge_helper.getTerrain %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom) )
+                print("start ge_helper.getTerrain %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
+                if ret != "ok":
+                    download_tasks["message"] = ret
+                    return {'download_status': 'failed', 'tile_info': download_tasks}
 
     return {'download_status': 'success', 'tile_info': download_tasks}
-
 
 # async def taskDispatcher(download_tasks): # 调用方
 #     tasks = map(download, download_tasks)

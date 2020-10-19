@@ -645,7 +645,7 @@ int  CLibGEHelper::getDBRoot()
 	return true;
 }
 
-int  CLibGEHelper::getTmDBRoot()
+bool CLibGEHelper::getTmDBRoot()
 {
 	std::stringstream ssUrl;
 	ssUrl << "http://khmdb.google.com/dbRoot.v5?db=tm&hl=en-GB&gl=US";
@@ -804,7 +804,7 @@ int CLibGEHelper::getVersion(const char* name, CacheManager::ETableType type)
 			}
 			QuadTreePacket16* packet = getQuadtree(qtName.c_str(), 0);
 			if (packet == nullptr)
-				return 0U;
+				return 999999U;
 
 			delete packet;
 			version = CacheManager::GetInstance().GetVersion(name, type);
@@ -1085,8 +1085,22 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	if (version <= 0)
 	{
 		version = getVersion(name, CacheManager::TYPE_IMAGE);
-		if (version <= 0)
+		if (version == 999999) {
+			//ÖØÊÔ3´Î
+			int cnt = 3;
+			while (cnt--) {
+				version = getVersion(name, CacheManager::TYPE_IMAGE);
+				if (version != 999999) {
+					break;
+				}
+			}
+			//
+			if (version == 999999) {
+				return "get_qtree_failed";
+			}
+		} else if (version <= 0) {
 			return "get_version_failed";
+		}
 	}
 	std::cout << "version :" << version << std::endl;
 
@@ -1095,8 +1109,18 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	ssKey << "f1-" << name << "-i." << version;
 	ssUrl << "http://" << randomServerURL() << "/flatfile?" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_IMAGE);
+	if (strResponse.empty()) {
+		int cnt = 3;
+		while (cnt--) {
+			strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_IMAGE);
+			if (strResponse != "") {
+				break;
+			}
+		}
+	}
+	//
 	if (strResponse.empty())
-		return "";
+		return "get_img_failed";
 
 	const char* data = strResponse.c_str();
 	size_t srcSize = strResponse.size();
@@ -1175,8 +1199,18 @@ std::string CLibGEHelper::getHistoryImage(const char* name, const std::string &v
 	ssKey << "f1-" << name << "-i." << version << "-" << date_hex;
 	ssUrl << "http://khmdb.google.com/flatfile?db=tm&" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_HISTORY_IMAGE);
+	if (strResponse.empty()) {
+		int cnt = 3;
+		while (cnt--) {
+			strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_HISTORY_IMAGE);
+			if (strResponse != "") {
+				break;
+			}
+		}
+	}
+	//
 	if (strResponse.empty())
-		return "";
+		return "get_history_img_failed";
 
 	const char* data = strResponse.c_str();
 	size_t srcSize = strResponse.size();
@@ -1315,7 +1349,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
 			std::cout << "get_version_failed" << std::endl;
-			return "error";
+			return "get_version_failed";
+		} else if (imgData == "get_qtree_failed") {
+			std::cout << "get_qtree_failed" << std::endl;
+			return "get_qtree_failed";
 		}
 		//
 		if (imgData.size() <= 0) {
@@ -1575,7 +1612,7 @@ std::string CLibGEHelper::getHistoryImageByDates(double minX, double minY, doubl
 				//
 				std::string ret = getHistoryImage(single_img_info[0].c_str(), single_img_info[3], single_img_info[2], false);
 				if (ret == "get_version_failed") {
-					return "error";
+					return "get_version_failed";
 				}
 				//
 				if (ret == "") {
@@ -1672,8 +1709,18 @@ std::string CLibGEHelper::getTerrain(const char* name, int version, int* pCols, 
 	ssKey << "f1c-" << newName << "-t." << version;
 	ssUrl << "http://" << randomServerURL() << "/flatfile?" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_TERRAIN);
+	if (strResponse.empty()) {
+		int cnt = 3;
+		while (cnt--) {
+			strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_TERRAIN);
+			if (strResponse != "") {
+				break;
+			}
+		}
+	}
+	//
 	if (strResponse.empty())
-		return "";
+		return "get_dem_failed";
 
 	Terrain terrain;
 	if (!terrain.decode(strResponse.c_str(), strResponse.size()))

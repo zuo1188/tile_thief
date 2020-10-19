@@ -13,6 +13,14 @@ def get_vector_size(url):
     file_size = int(r.headers['Content-Length'])
     return  file_size
 
+
+def get_local_file_exists_size(local_path):
+    try:
+        lsize = os.stat(local_path).st_size
+    except:
+        lsize = 0
+    return lsize
+
 def downloader(url, dest_filename,worker_dict):
     start = time.time()
     multipart_chunksize = 1024
@@ -37,20 +45,27 @@ def downloader(url, dest_filename,worker_dict):
             logger.warning('The filename [{}] has already exist, but it does not match the remote file'.format(official_filename))
             return
 
+    lsize = get_local_file_exists_size(temp_filename)
+    initial = 0
+    headers = {}
+    if lsize != 0:
+       headers = {'Range': 'bytes=%d-' % lsize}
+       initial = lsize
+
     # 分块下载，即使文件非常大，也不会撑爆内存
-    with tqdm(total=file_size, unit='B', unit_scale=True, unit_divisor=1024, desc=official_filename) as bar:  # 打印下载时的进度条，并动态显示下载速度
-        r = custom_request('GET', url, info='all content', stream=True)
+    with tqdm(total=file_size, initial=initial, unit='B', unit_scale=True, unit_divisor=1024, desc=official_filename) as bar:  # 打印下载时的进度条，并动态显示下载速度
+        r = custom_request('GET', url, info='all content', stream=True, headers=headers)
         if not r:  # 请求失败时，r 为 None
             logger.error('Failed to get all content on URL [{}]'.format(url))
             return
 
-        with open(temp_filename, 'wb') as fp:
+        with open(temp_filename, 'wb+') as fp:
             for chunk in r.iter_content(chunk_size=multipart_chunksize):
                 if chunk:
                     fp.write(chunk)
                     bar.update(len(chunk))
                     worker_dict["progress_value"] += len(chunk)
-                
+
     # 整个文件内容被成功下载后，将临时文件名修改回正式文件名
     if os.path.getsize(temp_filename) == file_size:  # 以防网络故障
         os.rename(temp_filename, official_filename)

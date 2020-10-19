@@ -1183,6 +1183,8 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 				GDALDatasetH poTmpDS = GDALCreateCopy(poDriver, imgFilePath.c_str(), readDS, false, nullptr, nullptr, nullptr);
 				if (poTmpDS != nullptr)
 					GDALClose(poTmpDS);
+				else
+					return "no_disk_space";
 			}
 			GDALClose(readDS);
 		}
@@ -1353,6 +1355,9 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		} else if (imgData == "get_qtree_failed") {
 			std::cout << "get_qtree_failed" << std::endl;
 			return "get_qtree_failed";
+		} else if (imgData == "no_disk_space") {
+			std::cout << "no_disk_space" << std::endl;
+			return "no_disk_space";
 		}
 		//
 		if (imgData.size() <= 0) {
@@ -1761,37 +1766,46 @@ std::string CLibGEHelper::getTerrain(const char* name, int version, int* pCols, 
 			else
 				strPrj = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0],UNIT[\"degree\",0.0174532925199433],AUTHORITY[\"EPSG\",\"4326\"]]";
 
-			GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName("GTiff");
-			char **papszOptions = nullptr;
-			papszOptions = CSLSetNameValue(papszOptions, "TFW", "ON");
-			GDALDataset* poOutDS = poDriver->Create(ssEncodePath.str().c_str(), nCols, nRows, 1, GDT_Float32, papszOptions);
-			if (poOutDS != nullptr)
-			{
-				double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
-				unsigned int tmplevel;
-				QtNodeBounds(it->name(), is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
-				double cellSizeX = (tmpMaxX - tmpMinX) / nCols;
-				double cellSizeY = (tmpMinY - tmpMaxY) / nRows;
-				double adfGeoTransform[6];
-				adfGeoTransform[0] = tmpMinX;
-				adfGeoTransform[1] = cellSizeX;
-				adfGeoTransform[2] = 0;
-				adfGeoTransform[3] = tmpMaxY;
-				adfGeoTransform[4] = 0;
-				adfGeoTransform[5] = cellSizeY;
-				poOutDS->SetGeoTransform(adfGeoTransform);
-				poOutDS->SetProjection(strPrj.c_str());
-				poOutDS->GetRasterBand(1)->SetNoDataValue(-FLT_MAX);
-				poOutDS->GetRasterBand(1)->RasterIO(GF_Write, 0, 0, nCols, nRows, imgData._Myptr(), nCols, nRows, GDT_Float32, 0, 0);
-				poOutDS->FlushCache();
-				GDALClose(poOutDS);
+			try{
+				GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName("GTiff");
+				char **papszOptions = nullptr;
+				papszOptions = CSLSetNameValue(papszOptions, "TFW", "ON");
+				GDALDataset* poOutDS = poDriver->Create(ssEncodePath.str().c_str(), nCols, nRows, 1, GDT_Float32, papszOptions);
+				if (poOutDS != nullptr)
+				{
+					double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
+					unsigned int tmplevel;
+					QtNodeBounds(it->name(), is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
+					double cellSizeX = (tmpMaxX - tmpMinX) / nCols;
+					double cellSizeY = (tmpMinY - tmpMaxY) / nRows;
+					double adfGeoTransform[6];
+					adfGeoTransform[0] = tmpMinX;
+					adfGeoTransform[1] = cellSizeX;
+					adfGeoTransform[2] = 0;
+					adfGeoTransform[3] = tmpMaxY;
+					adfGeoTransform[4] = 0;
+					adfGeoTransform[5] = cellSizeY;
+					poOutDS->SetGeoTransform(adfGeoTransform);
+					poOutDS->SetProjection(strPrj.c_str());
+					poOutDS->GetRasterBand(1)->SetNoDataValue(-FLT_MAX);
+					poOutDS->GetRasterBand(1)->RasterIO(GF_Write, 0, 0, nCols, nRows, imgData._Myptr(), nCols, nRows, GDT_Float32, 0, 0);
+					poOutDS->FlushCache();
+					GDALClose(poOutDS);
+				}
+				else {
+					return "no_disk_space";
+				}
+				if (papszOptions != nullptr)
+					CSLDestroy(papszOptions);
+				return imgData;
 			}
-			if (papszOptions != nullptr)
-				CSLDestroy(papszOptions);
-			return imgData;
+			catch (...) {
+
+			}
+			
 		}
 	}
-
+	//
 	return "";
 }
 
@@ -1856,6 +1870,9 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 		std::string imgData = getTerrain(name.c_str(), 0, &nCols, &nRows, is_mercator);
 		if (imgData == "get_version_failed") {
 			return "error";
+		}
+		else if (imgData == "no_disk_space") {
+			return "no_disk_space";
 		}
 
 		if (imgData.size() <= 0) {

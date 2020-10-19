@@ -73,8 +73,12 @@ def download_ge_tile(download_tasks):
             # dowload history data
             if map_type == "google_earth_sat":
                 print("start ge_helper.getHistoryImageByDates %f,%f,%f,%f zoom:%d date:%s" % (
-                min_x, min_y, max_x, max_y, zoom, date))
+                    min_x, min_y, max_x, max_y, zoom, date))
                 ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
+                if ret == "no_disk_space":
+                    download_tasks["message"] = ret
+                    return {'download_status': 'failed', 'tile_info': download_tasks}
+
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
@@ -88,6 +92,10 @@ def download_ge_tile(download_tasks):
             if map_type == "google_earth_sat":
                 print("start ge_helper.getImage %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
+                if ret == "no_disk_space":
+                    download_tasks["message"] = ret
+                    return {'download_status': 'failed', 'tile_info': download_tasks}
+
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
@@ -97,6 +105,10 @@ def download_ge_tile(download_tasks):
             else:
                 print("start ge_helper.getTerrain %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
+                if ret == "no_disk_space":
+                    download_tasks["message"] = ret
+                    return {'download_status': 'failed', 'tile_info': download_tasks}
+
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)

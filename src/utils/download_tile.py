@@ -2,6 +2,7 @@ import time
 import requests
 import os
 from utils.dem import gehelper_py
+from datetime import datetime
 
 REQUEST_HEADERS = {
     'User-Agent': 'Mozilla/5.0 (Macintosh; Intel Mac OS X 10_14_4) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/75.0.3770.100 Safari/537.36'
@@ -60,9 +61,12 @@ def download_ge_tile(download_tasks):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
     if not ge_helper.getTmDBRoot():
-        message = "Your IP may be blocked by google, Please check!"
-        print(message)
-        download_tasks["message"] = message
+        now = datetime.now()
+        datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+        error_str = "Your IP may be blocked by google, Please check!"
+        print(error_str)
+        error_message = [datestr + ' ' + error_str]
+        download_tasks["error_message"] = error_message
         return {'download_status': 'failed', 'tile_info': download_tasks}
 
     output_gbk = output.encode("gbk")
@@ -76,14 +80,24 @@ def download_ge_tile(download_tasks):
                     min_x, min_y, max_x, max_y, zoom, date))
                 ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
                 if ret == "no_disk_space":
-                    download_tasks["message"] = ret
+                    now = datetime.now()
+                    datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+                    error_str = ret
+                    print(error_str)
+                    error_message = [datestr + ' ' + error_str]
+                    download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
                 if ret != "ok":
-                    download_tasks["message"] = ret
+                    now = datetime.now()
+                    datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+                    error_str = ret
+                    print(error_str)
+                    error_message = [datestr + ' ' + error_str]
+                    download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
             else:
                 print("google earth dem only support latest dem")
@@ -93,27 +107,47 @@ def download_ge_tile(download_tasks):
                 print("start ge_helper.getImage %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
                 if ret == "no_disk_space":
-                    download_tasks["message"] = ret
+                    now = datetime.now()
+                    datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+                    error_str = ret
+                    print(error_str)
+                    error_message = [datestr + ' ' + error_str]
+                    download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
                 if ret != "ok":
-                    download_tasks["message"] = ret
+                    now = datetime.now()
+                    datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+                    error_str = ret
+                    print(error_str)
+                    error_message = [datestr + ' ' + error_str]
+                    download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
             else:
                 print("start ge_helper.getTerrain %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
                 if ret == "no_disk_space":
-                    download_tasks["message"] = ret
+                    now = datetime.now()
+                    datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+                    error_str = ret
+                    print(error_str)
+                    error_message = [datestr + ' ' + error_str]
+                    download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
                 while ret != "ok" and zoom >= 0:
                     zoom -= 1
                     ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
                 if ret != "ok":
-                    download_tasks["message"] = ret
+                    now = datetime.now()
+                    datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+                    error_str = ret
+                    print(error_str)
+                    error_message = [datestr + ' ' + error_str]
+                    download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
     return {'download_status': 'success', 'tile_info': download_tasks}

@@ -251,7 +251,7 @@ def download_ge_data(opts):
         def callback(result):
             opts.worker_dict["progress_value"] += 1
             if result['download_status'] != "success":
-                opts.worker_dict["message"] = result["tile_info"]["message"]
+                opts.worker_dict["error_message"] = result["tile_info"]["error_message"]
             pbar.update()
 
         for download_info_item in download_infos:

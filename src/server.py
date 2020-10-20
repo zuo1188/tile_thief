@@ -34,6 +34,7 @@ async def start_task(params):
 
     worker_dict=Manager().dict()
     worker_dict["progress_value"]=0
+    worker_dict["error_message"]=[]
     if params["type"] == "imagery":
         # todo: 这里应该加参数校验
         if "date" in params:
@@ -88,6 +89,17 @@ def get_progress(pids):
     
     return json.dumps(output)
 
+def get_error_logs(pids, count):
+    output = {}
+    for pid in pids:
+        if pid in workers:
+            if not count:
+                output[pid]=workers[pid]["data"]["error_message"][int(count) * -1, ]
+            else:
+                output[pid]=workers[pid]["data"]["error_message"]
+
+    return json.dumps(output)
+
 async def serve(websocket, path):
     if path == "/user":
         USERS['user'] = websocket
@@ -107,6 +119,8 @@ async def serve(websocket, path):
                     await websocket.send(get_data_count(data["params"]))
                 if data["action"] == "get_progress":
                     await websocket.send(get_progress(data["pid"]))
+                if data["action"] == "get_error_logs":
+                    await websocket.send(get_error_logs(data["pid"], data["count"])) 
         finally:
             del USERS['user']
 

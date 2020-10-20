@@ -38,7 +38,12 @@ def download_tile(download_tasks):
     if not download_succeeded:
         # TODO: Try to find true server
         print(tile_url)
-        return {'download_status': 'error', 'tile_info': download_tasks}
+        now = datetime.now()
+        datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+        error_str = '下载 tile_url 失败'
+        error_message = datestr + ' ' + error_str
+        download_tasks["error_message"] = error_message 
+        return {'download_status': 'failed', 'tile_info': download_tasks}
     else:
         return {'download_status': 'success', 'tile_info': download_tasks, 'data': data}
 
@@ -65,7 +70,7 @@ def download_ge_tile(download_tasks):
         datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
         error_str = "Your IP may be blocked by google, Please check!"
         print(error_str)
-        error_message = [datestr + ' ' + error_str]
+        error_message = datestr + ' ' + error_str
         download_tasks["error_message"] = error_message
         return {'download_status': 'failed', 'tile_info': download_tasks}
 
@@ -84,7 +89,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = [datestr + ' ' + error_str]
+                    error_message = datestr + ' ' + error_str
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
@@ -96,7 +101,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = [datestr + ' ' + error_str]
+                    error_message = datestr + ' ' + error_str
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
             else:
@@ -111,7 +116,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = [datestr + ' ' + error_str]
+                    error_message = datestr + ' ' + error_str
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
@@ -123,7 +128,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = [datestr + ' ' + error_str]
+                    error_message = datestr + ' ' + error_str
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
             else:
@@ -134,7 +139,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = [datestr + ' ' + error_str]
+                    error_message = datestr + ' ' + error_str
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
@@ -146,7 +151,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = [datestr + ' ' + error_str]
+                    error_message = datestr + ' ' + error_str
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 

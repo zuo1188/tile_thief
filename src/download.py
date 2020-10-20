@@ -251,7 +251,7 @@ def download_ge_data(opts):
         def callback(result):
             opts.worker_dict["progress_value"] += 1
             if result['download_status'] != "success":
-                opts.worker_dict["error_message"] = result["tile_info"]["error_message"]
+                opts.worker_dict["error_message"].append(result["tile_info"]["error_message"])
             pbar.update()
 
         for download_info_item in download_infos:
@@ -373,11 +373,13 @@ def download_tiles(opts):
                 opts.worker_dict["progress_value"] += 1
                 pbar.update()
                 
-
+                # todo
                 if result['download_status'] == 'success':
                     filename = result['tile_info']['filename']
                     data = result['data']
                     saveFile(filename, data)
+                elif result['download_status'] != "success":
+                    opts.worker_dict["error_message"].append(result["tile_info"]["error_message"])
 
             for download_info_item in download_infos:
                 pool.apply_async(download_tile, args=(download_info_item,), callback=callback)

@@ -4,6 +4,8 @@ import os
 from logger import logger
 from tqdm import tqdm
 from .custom_request import custom_request
+from .send_error_log import send_error_log
+
 def get_vector_size(url):
     # 获取文件的大小
     r = custom_request('HEAD', url, info='header message')
@@ -21,7 +23,7 @@ def get_local_file_exists_size(local_path):
         lsize = 0
     return lsize
 
-def downloader(url, dest_filename,worker_dict):
+def downloader(url, dest_filename, worker_dict):
     start = time.time()
     multipart_chunksize = 1024
      # 如果没有指定本地保存时的文件名，则默认使用 URL 中最后一部分作为文件名
@@ -31,7 +33,9 @@ def downloader(url, dest_filename,worker_dict):
     # 获取文件的大小
     r = custom_request('HEAD', url, info='header message')
     if not r:  # 请求失败时，r 为 None
-        logger.error('Failed to get header message on URL [{}]'.format(url))
+        message = 'Failed to get header message on URL [{}]'.format(url)
+        send_error_log(worker_dict, message) 
+        logger.error(message)
         return
     file_size = int(r.headers['Content-Length'])
     logger.info('File size: {} bytes'.format(file_size))
@@ -39,10 +43,14 @@ def downloader(url, dest_filename,worker_dict):
     # 如果正式文件存在
     if os.path.exists(official_filename):
         if os.path.getsize(official_filename) == file_size:  # 且大小与待下载的目标文件大小一致时
-            logger.warning('The file [{}] has already been downloaded'.format(official_filename))
+            message = 'The file [{}] has already been downloaded'.format(official_filename)
+            send_error_log(worker_dict, message)
+            logger.warning(message)
             return
         else:  # 大小不一致时，提醒用户要保存的文件名已存在，需要手动处理，不能随便覆盖
-            logger.warning('The filename [{}] has already exist, but it does not match the remote file'.format(official_filename))
+            message = 'The filename [{}] has already exist, but it does not match the remote file'.format(official_filename)
+            send_error_log(worker_dict, message)
+            logger.warning(message)
             return
 
     lsize = get_local_file_exists_size(temp_filename)
@@ -56,7 +64,9 @@ def downloader(url, dest_filename,worker_dict):
     with tqdm(total=file_size, initial=initial, unit='B', unit_scale=True, unit_divisor=1024, desc=official_filename) as bar:  # 打印下载时的进度条，并动态显示下载速度
         r = custom_request('GET', url, info='all content', stream=True, headers=headers)
         if not r:  # 请求失败时，r 为 None
-            logger.error('Failed to get all content on URL [{}]'.format(url))
+            message = 'Failed to get all content on URL [{}]'.format(url)
+            send_error_log(worker_dict, message)
+            logger.error(message)
             return
 
         with open(temp_filename, 'wb+') as fp:
@@ -72,4 +82,6 @@ def downloader(url, dest_filename,worker_dict):
         logger.info('{} downloaded'.format(official_filename))
         logger.info('Cost {:.2f} seconds'.format(time.time() - start))
     else:
-        logger.error('Failed to download {}'.format(official_filename))
+        message = 'Failed to download {}'.format(official_filename)
+        send_error_log(worker_dict, message)
+        logger.error(message)

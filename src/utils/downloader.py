@@ -62,19 +62,23 @@ def downloader(url, dest_filename, worker_dict):
 
     # 分块下载，即使文件非常大，也不会撑爆内存
     with tqdm(total=file_size, initial=initial, unit='B', unit_scale=True, unit_divisor=1024, desc=official_filename) as bar:  # 打印下载时的进度条，并动态显示下载速度
-        r = custom_request('GET', url, info='all content', stream=True, headers=headers)
-        if not r:  # 请求失败时，r 为 None
-            message = 'Failed to get all content on URL [{}]'.format(url)
-            send_error_log(worker_dict, message)
-            logger.error(message)
-            return
+        try:
+            r = custom_request('GET', url, info='all content', timeout=60, stream=True, headers=headers)
+            if not r:  # 请求失败时，r 为 None
+                message = 'Failed to get all content on URL [{}]'.format(url)
+                send_error_log(worker_dict, message)
+                logger.error(message)
+                return
 
-        with open(temp_filename, 'wb+') as fp:
-            for chunk in r.iter_content(chunk_size=multipart_chunksize):
-                if chunk:
-                    fp.write(chunk)
-                    bar.update(len(chunk))
-                    worker_dict["progress_value"] += len(chunk)
+            with open(temp_filename, 'wb+') as fp:
+                for chunk in r.iter_content(chunk_size=multipart_chunksize):
+                    if chunk:
+                        fp.write(chunk)
+                        bar.update(len(chunk))
+                        worker_dict["progress_value"] += len(chunk)
+        except requests.exceptions.RequestException as e:
+            logger.error(e)
+            send_error_log(worker_dict, str(e))
 
     # 整个文件内容被成功下载后，将临时文件名修改回正式文件名
     if os.path.getsize(temp_filename) == file_size:  # 以防网络故障

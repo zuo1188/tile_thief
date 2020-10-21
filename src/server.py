@@ -94,9 +94,9 @@ def get_error_logs(pids, count):
     for pid in pids:
         if pid in workers:
             if not count:
-                output[pid]=workers[pid]["data"]["error_message"]
+                output[pid]=workers[pid]["data"]["error_message"][::-1]
             else:
-                output[pid]=workers[pid]["data"]["error_message"][int(count) * -1:]
+                output[pid]=workers[pid]["data"]["error_message"][int(count) * -1:][::-1]
 
     return json.dumps(output)
 

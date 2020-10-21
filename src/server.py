@@ -94,9 +94,9 @@ def get_error_logs(pids, count):
     for pid in pids:
         if pid in workers:
             if not count:
-                output[pid]=workers[pid]["data"]["error_message"][int(count) * -1, ]
-            else:
                 output[pid]=workers[pid]["data"]["error_message"]
+            else:
+                output[pid]=workers[pid]["data"]["error_message"][int(count) * -1:]
 
     return json.dumps(output)
 
@@ -120,7 +120,10 @@ async def serve(websocket, path):
                 if data["action"] == "get_progress":
                     await websocket.send(get_progress(data["pid"]))
                 if data["action"] == "get_error_logs":
-                    await websocket.send(get_error_logs(data["pid"], data["count"])) 
+                    if 'count' in data:
+                        await websocket.send(get_error_logs(data["pid"], data["count"])) 
+                    else:
+                        await websocket.send(get_error_logs(data["pid"], None))
         finally:
             del USERS['user']
 

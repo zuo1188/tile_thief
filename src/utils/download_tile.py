@@ -17,10 +17,10 @@ def download_tile(download_tasks):
     tile_url = download_tasks['tile_url']
 
     zoom = 4
-    max_retries = 2 ** (15 - zoom)
-    if max_retries < 1:
-        max_retries = 1
-
+    max_retries = 3
+    # max_retries = 2 ** (15 - zoom)
+    # if max_retries < 1:
+    #     max_retries = 1
     for try_nr in range(1, max_retries + 2):
         # for try_nr in range(1, 2):
         try:
@@ -40,7 +40,7 @@ def download_tile(download_tasks):
         print(tile_url)
         now = datetime.now()
         datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
-        error_str = '下载 tile_url 失败'
+        error_str = '下载' + tile_url + '失败'
         error_message = datestr + ' ' + error_str
         download_tasks["error_message"] = error_message 
         return {'download_status': 'failed', 'tile_info': download_tasks}

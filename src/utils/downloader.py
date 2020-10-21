@@ -18,7 +18,7 @@ def get_vector_size(url):
 
 def get_local_file_exists_size(local_path):
     try:
-        lsize = os.stat(local_path).st_size
+        lsize = os.path.getsize(local_path)
     except:
         lsize = 0
     return lsize
@@ -70,7 +70,7 @@ def downloader(url, dest_filename, worker_dict):
                 logger.error(message)
                 return
 
-            with open(temp_filename, 'wb+') as fp:
+            with open(temp_filename, 'ab+') as fp:
                 for chunk in r.iter_content(chunk_size=multipart_chunksize):
                     if chunk:
                         fp.write(chunk)
@@ -89,3 +89,4 @@ def downloader(url, dest_filename, worker_dict):
         message = 'Failed to download {}'.format(official_filename)
         send_error_log(worker_dict, message)
         logger.error(message)
+        os.remove(temp_filename)

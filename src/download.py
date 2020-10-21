@@ -9,8 +9,9 @@ from collections import namedtuple
 from types import SimpleNamespace
 from multiprocessing import Pool
 from osgeo import ogr
+from datetime import datetime
 
-from utils.downloader import downloader,get_vector_size
+from utils.downloader import downloader, get_vector_size
 from utils.bounds2tiles import bounds2tiles
 from utils.geojson2tiles import geojson2tiles, geojson_path2tiles
 from utils.download_tile import download_tile, download_ge_tile
@@ -20,7 +21,8 @@ from utils.map_tencent import get_tencent_url
 from utils.map_baidu import get_baidu_url, baidu_bounds2tiles, baidu_get_number_of_tiles_at_level
 from utils.dem import gehelper_py
 from utils.dem import split_geo_tool
-from utils.custom_request import custom_request,check_key
+from utils.custom_request import custom_request, check_key
+
 SERVER_URL_MAPPING = {
     "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
     "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
@@ -42,10 +44,9 @@ def get_bbox(coord_list):
 
 
 def get_Imagery_count(min_zoom, max_zoom, geometry, map_type):
-    
     if map_type.find("google_earth") != -1:
-        ge_count = get_ge_count(min_zoom,max_zoom,geometry)
-        return {"ge_count":ge_count}
+        ge_count = get_ge_count(min_zoom, max_zoom, geometry)
+        return {"ge_count": ge_count}
     else:
         download_info = {}
         for zoom in range(min_zoom, max_zoom + 1):
@@ -58,17 +59,18 @@ def get_Imagery_count(min_zoom, max_zoom, geometry, map_type):
                 rect_bounds.right = bbox[2]
                 rect_bounds.left = bbox[0]
                 tiles = baidu_bounds2tiles(rect_bounds, zoom)
-            
-            
+
+
             else:
                 tiles = geojson2tiles(geometry, zoom)
 
-            
             download_info['zoom' + str(zoom)] = len(tiles)
         print(download_info)
         return download_info
-def get_vector_count(name,format):
-    with open("./src/data/vector_map.json",'r') as load_f:
+
+
+def get_vector_count(name, format):
+    with open("./src/data/vector_map.json", 'r') as load_f:
         vector_mapping = json.load(load_f)
     if name not in vector_mapping:
         print('矢量数据' + name + '不存在')
@@ -77,14 +79,16 @@ def get_vector_count(name,format):
         print('矢量数据' + name + '不存在' + format + '格式')
         return -1
     else:
-        
+
         return get_vector_size(vector_mapping[name][format])
+
 
 '''
 date：历史影像时间，只对google earth有效 样例:"1984:12:31"
 '''
-def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,worker_dict=None,ge_date=""):
-    
+
+
+def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count, worker_dict=None, ge_date=""):
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     opts = {}
     opts["min_zoom"] = min_zoom
@@ -100,13 +104,13 @@ def download(min_zoom, max_zoom, geometry, map_type, output_dir, process_count,w
     opts["right"] = bbox[2]
     opts["date"] = ge_date
     opts["worker_dict"] = worker_dict
-    
-    resp = custom_request("GET","http://meimeimap.cn:8002/getkey")
+
+    resp = custom_request("GET", "http://meimeimap.cn:8002/getkey")
     if resp:
         if not check_key(resp.text):
             return
     else:
-        return 
+        return
     new_opts = SimpleNamespace(**opts)
     if map_type in ["google_earth_sat", "google_earth_dem"]:
         download_ge_data(new_opts)
@@ -132,8 +136,10 @@ name ： 国家名
 format: shp、osm、pbf
 output：输出路径，需要先创建好
 '''
-def download_vector(name, format, output,worker_dict):
-    with open("./src/data/vector_map.json",'r') as load_f:
+
+
+def download_vector(name, format, output, worker_dict):
+    with open("./src/data/vector_map.json", 'r') as load_f:
         vector_mapping = json.load(load_f)
     if name not in vector_mapping:
         print('矢量数据' + name + '不存在')
@@ -144,8 +150,8 @@ def download_vector(name, format, output,worker_dict):
     else:
         print(vector_mapping[name][format])
         filename = output + "/%s.%s" % (name, format)
-        downloader(vector_mapping[name][format], filename,worker_dict)
-       
+        downloader(vector_mapping[name][format], filename, worker_dict)
+
         return True
 
 
@@ -185,15 +191,15 @@ def judge_bbox_is_valid(bbox, geojson):
     poly.AddGeometry(ring)
     intersection = input_geojson_poly.Intersection(poly)
 
-    if intersection.ExportToWkt()!=None:
+    if intersection.ExportToWkt() != None:
         return True
     return False
 
-def get_ge_count(min_zoom,max_zoom,geometry):
+
+def get_ge_count(min_zoom, max_zoom, geometry):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
     ge_helper.getTmDBRoot()
-   
 
     bbox = get_bbox(list(geojson.utils.coords(geometry)))
     split_zoom_level = 14
@@ -208,15 +214,20 @@ def get_ge_count(min_zoom,max_zoom,geometry):
     total_task_num = len(valid_bboxs)
     return total_task_num
 
+
 '''
 下载google_earth数据
 '''
 def download_ge_data(opts):
-    # ge_helper = gehelper_py.CLibGEHelper()
-    # ge_helper.Initialize()
-    # ge_helper.getTmDBRoot()
-    # print(opts.output)
-    # ge_helper.setCachePath(opts.output)
+    ge_helper = gehelper_py.CLibGEHelper()
+    ge_helper.Initialize()
+    if not ge_helper.getTmDBRoot():
+        now = datetime.now()
+        datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
+        error_str = "Your IP may be blocked by google, Please check!"
+        print(error_str)
+        opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [datestr + ' ' + error_str]
+        return False
 
     bbox = get_bbox(list(geojson.utils.coords(opts.geojson)))
     split_zoom_level = 14
@@ -260,12 +271,10 @@ def download_ge_data(opts):
         pool.close()
         pool.join()
 
-
-
     if len(download_tasks) > 0:
         start = time.time()
         taskDispatcher(download_tasks)
-        #print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
+        # print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
 
 
 def download_tiles(opts):
@@ -313,7 +322,7 @@ def download_tiles(opts):
             # processed_cnt += 1
             # pbar.update()
             # tile_url = opts.url + "/%d/%d/%d.png" % (zoom, y_index, x_index)
-            #print(opts.map_type)
+            # print(opts.map_type)
             tile_url = ''
             x_index = tile[0]
             y_index = tile[1]
@@ -363,16 +372,13 @@ def download_tiles(opts):
             print(no_concurrent)
             pool = Pool(int(no_concurrent))
             pbar = tqdm.tqdm(total=len(tiles))
-           
-            
-            
 
             def callback(result):
-                
-                #with opts.worker_dict.get_lock():
+
+                # with opts.worker_dict.get_lock():
                 opts.worker_dict["progress_value"] += 1
                 pbar.update()
-                
+
                 # todo
                 if result['download_status'] == 'success':
                     filename = result['tile_info']['filename']
@@ -386,13 +392,11 @@ def download_tiles(opts):
             pool.close()
             pool.join()
 
-       
-
         if len(download_tasks) > 0:
             start = time.time()
-            
+
             taskDispatcher(download_tasks)
-            #print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
+            # print('所有IO任务总耗时%.5f秒' % float(time.time() - start))
 
         success_cnt = processed_cnt - failed_cnt
         avg_size = 0
@@ -401,7 +405,7 @@ def download_tiles(opts):
             avg_size = sum_size / success_cnt
 
         print("processed %d tiles - downloaded: %d, failed: %d, avg size: %d" % (
-        processed_cnt, download_cnt, failed_cnt, avg_size))
+            processed_cnt, download_cnt, failed_cnt, avg_size))
     print("total download size: %d, total optimized size: %d" % (total_download_size, total_optimized_size))
 
 

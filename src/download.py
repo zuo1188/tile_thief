@@ -218,6 +218,8 @@ def get_ge_count(min_zoom, max_zoom, geometry):
 '''
 下载google_earth数据
 '''
+
+
 def download_ge_data(opts):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
@@ -263,7 +265,11 @@ def download_ge_data(opts):
         def callback(result):
             if result['download_status'] != "success":
                 opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
-                opts.worker_dict["progress_value"] = -1
+                error_message = result["tile_info"]["error_message"]
+                if error_message.find("no_disk_space") != -1:
+                    opts.worker_dict["progress_value"] = -1
+                else:
+                    opts.worker_dict["progress_value"] += 1
             else:
                 opts.worker_dict["progress_value"] += 1
 
@@ -389,7 +395,8 @@ def download_tiles(opts):
                     data = result['data']
                     saveFile(filename, data)
                 elif result['download_status'] != "success":
-                    opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
+                    opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [
+                        result["tile_info"]["error_message"]]
 
             for download_info_item in download_infos:
                 pool.apply_async(download_tile, args=(download_info_item,), callback=callback)

@@ -227,6 +227,7 @@ def download_ge_data(opts):
         error_str = "Your IP may be blocked by google, Please check!"
         print(error_str)
         opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [datestr + ' ' + error_str]
+        opts.worker_dict["progress_value"] = -1
         return False
 
     bbox = get_bbox(list(geojson.utils.coords(opts.geojson)))
@@ -260,9 +261,12 @@ def download_ge_data(opts):
         pbar = tqdm.tqdm(total=len(valid_bboxs))
 
         def callback(result):
-            opts.worker_dict["progress_value"] += 1
             if result['download_status'] != "success":
                 opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
+                opts.worker_dict["progress_value"] = -1
+            else:
+                opts.worker_dict["progress_value"] += 1
+
             pbar.update()
 
         for download_info_item in download_infos:

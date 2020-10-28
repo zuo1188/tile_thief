@@ -79,6 +79,7 @@ def downloader(url, dest_filename, worker_dict):
         except requests.exceptions.RequestException as e:
             logger.error(e)
             send_error_log(worker_dict, str(e))
+            return
 
     # 整个文件内容被成功下载后，将临时文件名修改回正式文件名
     if os.path.getsize(temp_filename) == file_size:  # 以防网络故障

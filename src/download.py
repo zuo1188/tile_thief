@@ -218,6 +218,8 @@ def get_ge_count(min_zoom, max_zoom, geometry):
 '''
 下载google_earth数据
 '''
+
+
 def download_ge_data(opts):
     ge_helper = gehelper_py.CLibGEHelper()
     ge_helper.Initialize()
@@ -227,6 +229,7 @@ def download_ge_data(opts):
         error_str = "Your IP may be blocked by google, Please check!"
         print(error_str)
         opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [datestr + ' ' + error_str]
+        opts.worker_dict["progress_value"] = -1
         return False
 
     bbox = get_bbox(list(geojson.utils.coords(opts.geojson)))
@@ -260,9 +263,16 @@ def download_ge_data(opts):
         pbar = tqdm.tqdm(total=len(valid_bboxs))
 
         def callback(result):
-            opts.worker_dict["progress_value"] += 1
             if result['download_status'] != "success":
                 opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
+                error_message = result["tile_info"]["error_message"]
+                if error_message.find("no_disk_space") != -1 or error_message.find("Your IP may be blocked by google, Please check!") != -1:
+                    opts.worker_dict["progress_value"] = -1
+                else:
+                    opts.worker_dict["progress_value"] += 1
+            else:
+                opts.worker_dict["progress_value"] += 1
+
             pbar.update()
 
         for download_info_item in download_infos:
@@ -385,7 +395,8 @@ def download_tiles(opts):
                     data = result['data']
                     saveFile(filename, data)
                 elif result['download_status'] != "success":
-                    opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
+                    opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [
+                        result["tile_info"]["error_message"]]
 
             for download_info_item in download_infos:
                 pool.apply_async(download_tile, args=(download_info_item,), callback=callback)

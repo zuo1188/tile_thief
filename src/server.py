@@ -44,6 +44,7 @@ async def start_task(params):
         p_worker = Process(target=download,args=[params["min_zoom"], params["max_zoom"], params["geometry"], params["map_type"],params["output_dir"], params["process_count"],worker_dict,dt])
         p_worker.start()
         workers[p_worker.pid] = {}
+        worker_dict["pid"] = p_worker.pid
         workers[p_worker.pid]["worker"] = p_worker
         workers[p_worker.pid]["data"] = worker_dict
         
@@ -51,6 +52,7 @@ async def start_task(params):
         p_worker = Process(target=download_vector,args=[params["name"], params["format"], params["output_dir"],worker_dict])
         p_worker.start()
         workers[p_worker.pid] = {}
+        worker_dict["pid"] = p_worker.pid
         workers[p_worker.pid]["worker"] = p_worker
         workers[p_worker.pid]["data"] = worker_dict
     return json.dumps({"status": 0,"pid":p_worker.pid})

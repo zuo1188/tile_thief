@@ -10,6 +10,7 @@ from types import SimpleNamespace
 from multiprocessing import Pool
 from osgeo import ogr
 from datetime import datetime
+import psutil
 
 from utils.downloader import downloader, get_vector_size
 from utils.bounds2tiles import bounds2tiles
@@ -34,6 +35,9 @@ SERVER_URL_MAPPING = {
     "google_earth_dem": ""
 }
 
+def cancle_task(worker_dict):
+    p = psutil.Process(worker_dict["pid"])
+    p.kill()
 
 def get_bbox(coord_list):
     box = []
@@ -266,8 +270,9 @@ def download_ge_data(opts):
             if result['download_status'] != "success":
                 opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
                 error_message = result["tile_info"]["error_message"]
-                if error_message.find("no_disk_space") != -1:
+                if error_message.find("no_disk_space") != -1 or error_message.find("Your IP may be blocked by google, Please check!") != -1:
                     opts.worker_dict["progress_value"] = -1
+                    cancle_task(opts.worker_dict)
                 else:
                     opts.worker_dict["progress_value"] += 1
             else:

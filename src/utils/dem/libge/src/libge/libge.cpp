@@ -1614,12 +1614,13 @@ std::string CLibGEHelper::getHistoryImageByDates(double minX, double minY, doubl
 				}
 				//
 				std::string ret = getHistoryImage(single_img_info[0].c_str(), single_img_info[3], single_img_info[2], false);
-				if (ret == "get_version_failed") {
-					return "get_version_failed";
-				}
+				//if (ret == "get_version_failed") {
+				//	return "get_version_failed";
+				//}
 				//
-				if (ret == "") {
+				if (ret == "" || ret == "get_version_failed"){
 					is_all_ok = false;
+					continue;
 				}
 			}
 		}
@@ -1739,7 +1740,8 @@ std::string CLibGEHelper::getTerrain(const char* name, int version, int* pCols, 
 			int nRows = 0;
 			std::string imgData = terrain.toDEM(*it, nCols, nRows, is_mercator);
 			if (imgData.size() <= 0)
-				return "";
+				continue;
+				//return "";
 
 			if (pCols)
 				*pCols = nCols;

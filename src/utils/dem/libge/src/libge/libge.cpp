@@ -1351,16 +1351,14 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
 			std::cout << "get_version_failed" << std::endl;
-			return "get_version_failed";
 		} else if (imgData == "get_qtree_failed") {
 			std::cout << "get_qtree_failed" << std::endl;
-			return "get_qtree_failed";
 		} else if (imgData == "no_disk_space") {
 			std::cout << "no_disk_space" << std::endl;
 			return "no_disk_space";
 		}
 		//
-		if (imgData.size() <= 0) {
+		if (imgData.size() <= 0 || imgData == "get_version_failed" || imgData == "get_qtree_failed") {
 			std::cout << "get " << name << " failed" << std::endl;
 			is_all_ok = false;
 			continue;

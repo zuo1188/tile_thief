@@ -60,6 +60,7 @@ def downloader(url, dest_filename, worker_dict):
        headers = {'Range': 'bytes=%d-' % lsize}
        initial = lsize
 
+    worker_dict["progress_value"] = initial
     # 分块下载，即使文件非常大，也不会撑爆内存
     with tqdm(total=file_size, initial=initial, unit='B', unit_scale=True, unit_divisor=1024, desc=official_filename) as bar:  # 打印下载时的进度条，并动态显示下载速度
         try:

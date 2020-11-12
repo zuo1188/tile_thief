@@ -101,6 +101,7 @@ bool Mesh::decode(const char* srcData, unsigned long size, unsigned long& offset
 			ox_, oy_,
 			dx_, dy_);
 		*/
+		if (num_points_ < 0) return false;
 		vertices_.resize(num_points_);
 		for (int i = 0; i < num_points_; ++i)
 		{
@@ -168,6 +169,10 @@ bool Terrain::decode(const char* srcData, unsigned long srcSize)
 				meshs.push_back(mesh);
 				push_back(meshs);
 			}
+		} 
+		else
+		{
+			break;
 		}
 	}
 

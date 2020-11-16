@@ -242,9 +242,10 @@ def download_ge_data(opts):
 
     str_geojson = json.dumps(opts.geojson["geometry"])
     valid_bboxs = []
-    for bbox_splited in bboxs:
-        if judge_bbox_is_valid(bbox_splited, str_geojson):
-            valid_bboxs.append(bbox_splited)
+    # for bbox_splited in bboxs:
+    #     if judge_bbox_is_valid(bbox_splited, str_geojson):
+    #         valid_bboxs.append(bbox_splited)
+    valid_bboxs.append(bbox)
 
     total_task_num = len(valid_bboxs)
     opts.worker_dict["progress_value"] = 0

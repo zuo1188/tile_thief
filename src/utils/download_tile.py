@@ -93,9 +93,9 @@ def download_ge_tile(download_tasks):
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
-                while ret != "ok" and zoom >= 0:
-                    zoom -= 1
-                    ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
+                # while ret != "ok" and zoom >= 0:
+                #     zoom -= 1
+                #     ret = ge_helper.getHistoryImageByDates(min_x, min_y, max_x, max_y, zoom, date)
                 if ret != "ok":
                     now = datetime.now()
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
@@ -120,9 +120,9 @@ def download_ge_tile(download_tasks):
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
-                while ret != "ok" and zoom >= 0:
-                    zoom -= 1
-                    ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
+                # while ret != "ok" and zoom >= 0:
+                #     zoom -= 1
+                #     ret = ge_helper.getImage(min_x, min_y, max_x, max_y, zoom)
                 if ret != "ok":
                     now = datetime.now()
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
@@ -143,9 +143,9 @@ def download_ge_tile(download_tasks):
                     download_tasks["error_message"] = error_message
                     return {'download_status': 'failed', 'tile_info': download_tasks}
 
-                while ret != "ok" and zoom >= 0:
-                    zoom -= 1
-                    ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
+                # while ret != "ok" and zoom >= 0:
+                #     zoom -= 1
+                #     ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
                 if ret != "ok":
                     now = datetime.now()
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")

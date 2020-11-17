@@ -215,7 +215,7 @@ CLibGEHelper::CLibGEHelper()
 	sstr << szDrive << szDir << "\\Cache\\";
 	_mkdir(sstr.str().c_str());
 	_cachePath = sstr.str();
-	//std::cout << "_cachePath : " << _cachePath << std::endl;
+	std::cout << "_cachePath : " << _cachePath << std::endl;
 
 	std::string cacheDBPath = _cachePath + "\\libge_cache.db";
 	CacheManager::GetInstance().Open(cacheDBPath.c_str());
@@ -253,7 +253,7 @@ CLibGEHelper::CLibGEHelper(std::string cache_path)
 	_splitpath_s(szPath, szDrive, _MAX_DRIVE, szDir, _MAX_DIR, NULL, 0, NULL, 0);
 #endif
 	_cachePath = cache_path;
-	//std::cout << "_cachePath : " << _cachePath << std::endl;
+	std::cout << "_cachePath : " << _cachePath << std::endl;
 
 	std::string cacheDBPath = _cachePath + "\\progress.db";
 	CacheManager::GetInstance().Open(cacheDBPath.c_str());
@@ -1332,6 +1332,13 @@ long CLibGEHelper::getImageNums(double minX, double minY, double maxX, double ma
 	return getImageNums(minX, minY, maxX, maxY, level, 256, 256, false);
 }
 
+struct DownloadDetailInfo{
+	long id;
+	std::string zxy;
+	std::string bbox;
+	std::string download_status;
+};
+
 std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator)
 {
 	std::vector<std::string> names = ConvertToQtNode(minY, minX, maxY, maxX, level, is_mercator);
@@ -1381,15 +1388,15 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	//
 	long record_id = 0;
 	//
+	std::vector<DownloadDetailInfo> download_detail_infos;
 	for (int i = 0; i < names.size(); i++)
 	{
 		processed_num++;
 		//向sqlite更新进度
-		if (processed_num % 20 == 0 || processed_num >= total_num) {
+		if (processed_num % 20 == 0) {
 			record_id++;
 			std::stringstream ss;
 			ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << processed_num-1;
-			//CacheManager::GetInstance().AddProgress(std::to_string(record_id), ss.str(), CacheManager::TYPE_PROGRESS);
 			CacheManager::GetInstance().AddProgress(record_id, ss.str(), CacheManager::TYPE_PROGRESS);
 		}
 		//
@@ -1404,8 +1411,21 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		//
 		std::stringstream ssEncodePath;
 		ssEncodePath << _cachePath << "\\" << level << "\\" << x << "\\" << y << ".jpg";
+		//
+		double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
+		unsigned int tmplevel;
+		QtNodeBounds(name, is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
+		std::string str_bbox = std::to_string(tmpMinX) + "_" + std::to_string(tmpMinY) + "_" + std::to_string(tmpMaxX) + "_" + std::to_string(tmpMaxY);
+		//
+		std::string zxy = std::to_string(level) + "_" + std::to_string(y) + "_" + std::to_string(y);
 		auto imgFilePath = ssEncodePath.str();
 		if ((_access(imgFilePath.c_str(), 0)) != -1) {
+			DownloadDetailInfo download_detail_info;
+			download_detail_info.id = i;
+			download_detail_info.zxy = zxy;
+			download_detail_info.bbox = str_bbox;
+			download_detail_info.download_status = "already_downloaded";
+			download_detail_infos.push_back(download_detail_info);
 			continue;
 		}
 		//
@@ -1424,14 +1444,26 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		if (imgData.size() <= 0 || imgData == "get_version_failed" || imgData == "get_qtree_failed") {
 			std::cout << "get " << name << " failed" << std::endl;
 			is_all_ok = false;
+			//
+			DownloadDetailInfo download_detail_info;
+			download_detail_info.id = i;
+			download_detail_info.zxy = zxy;
+			download_detail_info.bbox = str_bbox;
+			download_detail_info.download_status = imgData;
+			download_detail_infos.push_back(download_detail_info);
 			continue;
 		}
 		//
 		download_ok_num++;
+		//
+		DownloadDetailInfo download_detail_info;
+		download_detail_info.id = i;
+		download_detail_info.zxy = zxy;
+		download_detail_info.bbox = str_bbox;
+		download_detail_info.download_status = "ok";
+		download_detail_infos.push_back(download_detail_info);
 
-		double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
-		unsigned int tmplevel;
-		QtNodeBounds(name, is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
+		
 		double cellSizeX = (tmpMaxX - tmpMinX) / 256.0;
 		double cellSizeY = (tmpMinY - tmpMaxY) / 256.0;
 		double adfGeoTransform[6];
@@ -1537,6 +1569,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		std::stringstream ss;
 		ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << total_num;
 		CacheManager::GetInstance().AddProgress(record_id, ss.str(), CacheManager::TYPE_PROGRESS);
+	}
+
+	for (auto &d : download_detail_infos) {
+		CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.zxy, d.bbox, d.download_status);
 	}
 
 	/*std::string imgData;

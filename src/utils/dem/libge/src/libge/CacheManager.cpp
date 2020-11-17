@@ -120,6 +120,17 @@ sqlite3* CacheManager::_open(const char* lpszFile)
 				return FALSE;
 			}
 		}
+
+		{ 
+			std::stringstream ssSQL;
+			ssSQL << "CREATE TABLE TImageDownloadDetailInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, zxy TEXT, bbox TEXT, download_status TEXT)";
+			rc = sqlite3_exec(pSqlite, ssSQL.str().c_str(), NULL, NULL, &errMsg);
+			if (rc != SQLITE_OK)
+			{
+				sqlite3_close(pSqlite);
+				return FALSE;
+			}
+		}
 	}
 
 	return pSqlite;
@@ -618,6 +629,17 @@ bool CacheManager::AddProgress(long id, const std::string& progress, ETableType 
 	{
 		std::stringstream ssSQL;
 		ssSQL << "Insert into TProgress(id, progress) values(" << id << ",'" << progress << "')";
+		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
+	}
+}
+
+bool CacheManager::AddImageDowndDetailInfo(long id, const std::string &zxy, const std::string &bbox, const std::string &download_status) {
+	if (m_pSqlite == NULL)
+		return false;
+
+	{
+		std::stringstream ssSQL;
+		ssSQL << "Insert into TImageDownloadDetailInfo(id, zxy, bbox, download_status) values(" << id << ",'" << zxy << "','" << bbox << "','" << download_status << "')";
 		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
 	}
 }

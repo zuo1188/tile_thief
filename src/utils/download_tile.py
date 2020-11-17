@@ -42,7 +42,7 @@ def download_tile(download_tasks):
         datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
         error_str = '下载' + tile_url + '失败'
         error_message = datestr + ' ' + error_str
-        download_tasks["error_message"] = error_message 
+        download_tasks["error_message"] = error_message
         return {'download_status': 'failed', 'tile_info': download_tasks}
     else:
         return {'download_status': 'success', 'tile_info': download_tasks, 'data': data}
@@ -77,6 +77,7 @@ def download_ge_tile(download_tasks):
     output_gbk = output.encode("gbk")
     ge_helper.setCachePath(output_gbk)
 
+    error_info = ""
     for zoom in range(min_zoom, max_zoom + 1):
         if date != "":
             # dowload history data
@@ -101,9 +102,8 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = datestr + ' ' + error_str
-                    download_tasks["error_message"] = error_message
-                    return {'download_status': 'failed', 'tile_info': download_tasks}
+                    error_info = datestr + ' ' + error_str
+                    continue
             else:
                 print("google earth dem only support latest dem")
         else:
@@ -116,9 +116,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = datestr + ' ' + error_str
-                    download_tasks["error_message"] = error_message
-                    return {'download_status': 'failed', 'tile_info': download_tasks}
+                    error_info = datestr + ' ' + error_str
 
                 # while ret != "ok" and zoom >= 0:
                 #     zoom -= 1
@@ -128,9 +126,7 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = datestr + ' ' + error_str
-                    download_tasks["error_message"] = error_message
-                    return {'download_status': 'failed', 'tile_info': download_tasks}
+                    error_info = datestr + ' ' + error_str
             else:
                 print("start ge_helper.getTerrain %f,%f,%f,%f zoom:%d" % (min_x, min_y, max_x, max_y, zoom))
                 ret = ge_helper.getTerrain(min_x, min_y, max_x, max_y, zoom)
@@ -151,11 +147,13 @@ def download_ge_tile(download_tasks):
                     datestr = now.strftime("%m/%d/%Y, %H:%M:%S")
                     error_str = ret
                     print(error_str)
-                    error_message = datestr + ' ' + error_str
-                    download_tasks["error_message"] = error_message
-                    return {'download_status': 'failed', 'tile_info': download_tasks}
+                    error_info = datestr + ' ' + error_str
 
-    return {'download_status': 'success', 'tile_info': download_tasks}
+    if error_info == "":
+        return {'download_status': 'success', 'tile_info': download_tasks}
+    else:
+        download_tasks["error_message"] = error_info
+        return {'download_status': 'failed', 'tile_info': download_tasks}
 
 # async def taskDispatcher(download_tasks): # 调用方
 #     tasks = map(download, download_tasks)

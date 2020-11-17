@@ -237,10 +237,10 @@ def download_ge_data(opts):
         return False
 
     bbox = get_bbox(list(geojson.utils.coords(opts.geojson)))
-    split_zoom_level = 14
-    bboxs = split_geo_tool.split_bbox(bbox, split_zoom_level, split_zoom_level)
+    # split_zoom_level = 14
+    # bboxs = split_geo_tool.split_bbox(bbox, split_zoom_level, split_zoom_level)
 
-    str_geojson = json.dumps(opts.geojson["geometry"])
+    # str_geojson = json.dumps(opts.geojson["geometry"])
     valid_bboxs = []
     # for bbox_splited in bboxs:
     #     if judge_bbox_is_valid(bbox_splited, str_geojson):

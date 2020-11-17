@@ -239,6 +239,45 @@ CLibGEHelper::CLibGEHelper()
 	}
 }
 
+CLibGEHelper::CLibGEHelper(std::string cache_path)
+{
+	_version = 0U;
+
+	char szPath[_MAX_PATH];
+	GetModuleFileNameA(nullptr, szPath, _MAX_PATH);
+	char szDrive[_MAX_DRIVE];
+	char szDir[_MAX_DIR];
+#if _MSC_VER < 1600
+	_splitpath(szPath, szDrive, szDir, NULL, NULL);
+#else
+	_splitpath_s(szPath, szDrive, _MAX_DRIVE, szDir, _MAX_DIR, NULL, 0, NULL, 0);
+#endif
+	_cachePath = cache_path;
+	//std::cout << "_cachePath : " << _cachePath << std::endl;
+
+	std::string cacheDBPath = _cachePath + "\\progress.db";
+	CacheManager::GetInstance().Open(cacheDBPath.c_str());
+
+	memset(_crypt_key, 0, sizeof(_crypt_key));
+	memcpy(_crypt_key, GOOGLE_EARTH_CRYPT_KEY, sizeof(_crypt_key));
+
+	_serverURLs.push_back("kh.google.com");
+
+	{
+		std::string geAuth;
+		geAuth.resize(sizeof(GOOGLE_EARTH_GEAUTH2));
+		memcpy(geAuth._Myptr(), GOOGLE_EARTH_GEAUTH2, sizeof(GOOGLE_EARTH_GEAUTH2));
+		_geAuths.push_back(geAuth);
+	}
+	{
+		std::string geAuth;
+		geAuth.resize(sizeof(GOOGLE_EARTH_GEAUTH3));
+		memcpy(geAuth._Myptr(), GOOGLE_EARTH_GEAUTH3, sizeof(GOOGLE_EARTH_GEAUTH3));
+		_geAuths.push_back(geAuth);
+	}
+}
+
+
 CLibGEHelper::~CLibGEHelper()
 {
 }
@@ -910,7 +949,7 @@ QuadTreePacket16* CLibGEHelper::getQuadtree(const char* baseGEName, int version)
 	std::stringstream ssUrl;
 	std::stringstream ssKey;
 	ssKey << "q2-" << baseGEName << "-q." << (version <= 0 ? _version : version);
-	ssUrl << "http://" << randomServerURL() << "/flatfile?" << ssKey.str();
+	ssUrl << "https://" << randomServerURL() << "/flatfile?" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_QUADTREE);
 	if (strResponse.empty())
 		return nullptr;
@@ -1330,8 +1369,30 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	std::string allName;
 	bool firstDS = true;
 	bool is_all_ok = true;
+	long total_num = names.size();
+	//下载成功的瓦片数量
+	long download_ok_num = 0;
+	//下载失败的瓦片数量
+	long download_failed_num = 0;
+	//缺失的瓦片数量
+	long download_missing_num = 0;
+	//已处理过的瓦片数量
+	long processed_num = 0;
+	//
+	long record_id = 0;
+	//
 	for (int i = 0; i < names.size(); i++)
 	{
+		processed_num++;
+		//向sqlite更新进度
+		if (processed_num % 20 == 0 || processed_num >= total_num) {
+			record_id++;
+			std::stringstream ss;
+			ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << processed_num-1;
+			//CacheManager::GetInstance().AddProgress(std::to_string(record_id), ss.str(), CacheManager::TYPE_PROGRESS);
+			CacheManager::GetInstance().AddProgress(record_id, ss.str(), CacheManager::TYPE_PROGRESS);
+		}
+		//
 		std::string name = names.at(i);
 		if (allName.empty())
 			allName = name;
@@ -1350,8 +1411,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		//
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
+			download_missing_num++;
 			std::cout << "get_version_failed" << std::endl;
 		} else if (imgData == "get_qtree_failed") {
+			download_failed_num++;
 			std::cout << "get_qtree_failed" << std::endl;
 		} else if (imgData == "no_disk_space") {
 			std::cout << "no_disk_space" << std::endl;
@@ -1363,6 +1426,8 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			is_all_ok = false;
 			continue;
 		}
+		//
+		download_ok_num++;
 
 		double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
 		unsigned int tmplevel;
@@ -1466,8 +1531,15 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 				VRT_NODATA_UNSET);
 		}
 	}
+	//向sqlite更新进度
+	{
+		record_id++;
+		std::stringstream ss;
+		ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << total_num;
+		CacheManager::GetInstance().AddProgress(record_id, ss.str(), CacheManager::TYPE_PROGRESS);
+	}
 
-	std::string imgData;
+	/*std::string imgData;
 	if (GDALGetRasterCount(hVRTDS) > 0)
 	{
 	const char *pszFormat = "JPEG";
@@ -1485,7 +1557,8 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	CPLFree(binData);
 	}
 	}
-	GDALClose(hVRTDS);
+	GDALClose(hVRTDS); */
+	//
 	if (is_all_ok) {
 		return "ok";
 	}

@@ -109,6 +109,17 @@ sqlite3* CacheManager::_open(const char* lpszFile)
 				return FALSE;
 			}
 		}
+
+		{
+			std::stringstream ssSQL;
+			ssSQL << "CREATE TABLE TProgress (id INTEGER PRIMARY KEY AUTOINCREMENT, progress TEXT)";
+			rc = sqlite3_exec(pSqlite, ssSQL.str().c_str(), NULL, NULL, &errMsg);
+			if (rc != SQLITE_OK)
+			{
+				sqlite3_close(pSqlite);
+				return FALSE;
+			}
+		}
 	}
 
 	return pSqlite;
@@ -597,6 +608,18 @@ std::string CacheManager::GetFaltfile(const std::string& url, ETableType type)
 	}
 
 	return data;
+}
+
+bool CacheManager::AddProgress(long id, const std::string& progress, ETableType type)
+{
+	if (m_pSqlite == NULL)
+		return false;
+
+	{
+		std::stringstream ssSQL;
+		ssSQL << "Insert into TProgress(id, progress) values(" << id << ",'" << progress << "')";
+		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
+	}
 }
 
 LIBGE_NAMESPACE_END

@@ -24,7 +24,8 @@ BOOST_PYTHON_MODULE(gehelper_py)
 	void (CLibGEHelper::*setCachePath)(const std::string& path) = &CLibGEHelper::cachePath;
 
 
-	class_<CLibGEHelper>("CLibGEHelper", init<>()) //导入一个默认构造函数的，类
+	class_<CLibGEHelper>("CLibGEHelper", init<std::string>()) 
+		.def(init<>()) //导入一个默认构造函数的，类
 		.def("Initialize", &CLibGEHelper::Initialize)
 		.staticmethod("Initialize")
 		.def("getImage", getImage1)

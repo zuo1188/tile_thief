@@ -62,8 +62,9 @@ def download_ge_tile(download_tasks):
     date = download_tasks['date']
     map_type = download_tasks['map_type']
     output = download_tasks['output']
+    output_gbk = output.encode("gbk")
 
-    ge_helper = gehelper_py.CLibGEHelper()
+    ge_helper = gehelper_py.CLibGEHelper(output_gbk)
     ge_helper.Initialize()
     if not ge_helper.getTmDBRoot():
         now = datetime.now()
@@ -74,7 +75,6 @@ def download_ge_tile(download_tasks):
         download_tasks["error_message"] = error_message
         return {'download_status': 'failed', 'tile_info': download_tasks}
 
-    output_gbk = output.encode("gbk")
     ge_helper.setCachePath(output_gbk)
 
     error_info = ""

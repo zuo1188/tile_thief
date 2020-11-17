@@ -32,6 +32,7 @@ public:
 	}EFaltfileType;
 public:
 	CLibGEHelper();
+	CLibGEHelper(std::string cache_path);
 	virtual ~CLibGEHelper();
 
 public:

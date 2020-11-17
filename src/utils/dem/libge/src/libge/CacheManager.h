@@ -17,7 +17,8 @@ public:
 		TYPE_HISTORY_IMAGE,
 		TYPE_HISTORY_IMAGE_DATE,
 		TYPE_HISTORY_IMAGE_INFO,
-		TYPE_UNKNOWN
+		TYPE_UNKNOWN,
+		TYPE_PROGRESS
 	}ETableType;
 
 public:
@@ -65,6 +66,9 @@ public:
 
 	bool AddHistoryImageVersionInfo(const std::string& name, const std::string data, ETableType type);
 	std::string GetHistoryImageVersionInfo(const std::string& name, ETableType type);
+
+	bool AddProgress(long id, const std::string& progress, ETableType type);
+	//bool AddProgress(const std::string &id, const std::string& progress, ETableType type);
 
 protected:
 	sqlite3* _open(const char* lpszFile);

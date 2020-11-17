@@ -7,9 +7,9 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	LibGE::CLibGEHelper::Initialize();
-	LibGE::CLibGEHelper helper;	
+	LibGE::CLibGEHelper helper("e:/test6");
 	helper.getTmDBRoot();
-	helper.cachePath("e:/test");
+	helper.cachePath("e:/test6");
 	//std::string strAllImageDates = helper.getHistoryImageDates(116.13612, 39.710138, 116.657971, 40.096766, 10, 256, 256, false);
 	//helper.getHistoryImageByDates(116.13612, 39.710138, 116.657971, 40.096766, 8, "1984:12:31", 256, 256, false);
 	//helper.getQuadtree(0, 0, 0, 0, true);
@@ -50,13 +50,13 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//long image_nums = helper.getImageNums(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 15, 256, 256, false);
 
-	helper.getImage(65.71648222118225, 31.62623091778558, 65.74604425124875, 31.6430146895391, 17, 17, 256, false);
+	//helper.getImage(65.71648222118225, 31.62623091778558, 65.74604425124875, 31.6430146895391, 17, 17, 256, false);
 
 	//helper.getTerrain(28.520508, 40.963308, 28.542480, 40.9798980, 18, 256, 256, false);
 
 	//helper.getTerrain(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 3, 256, 256, false);
 
-	//helper.getImage(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 22, 256, 256, false);
+	helper.getImage(139.39856879708, 35.2806334954318, 139.408261153539, 35.3223243282888, 18, 256, 256, false);
 	//helper.getTerrain(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 15, 256, 256, false);
 	
 

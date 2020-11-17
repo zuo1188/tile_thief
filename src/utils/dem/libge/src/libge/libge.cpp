@@ -1467,7 +1467,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		}
 	}
 
-	/*std::string imgData;
+	std::string imgData;
 	if (GDALGetRasterCount(hVRTDS) > 0)
 	{
 	const char *pszFormat = "JPEG";
@@ -1485,7 +1485,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	CPLFree(binData);
 	}
 	}
-	GDALClose(hVRTDS);*/
+	GDALClose(hVRTDS);
 	if (is_all_ok) {
 		return "ok";
 	}

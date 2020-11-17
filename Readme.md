@@ -290,3 +290,20 @@ src 代码目录
 ---download.py 下载函数API入口
 ---server.py  websocket服务入口
 ```
+## 4 测试方法
+
+### 4.1 软件启动
+命令行进入到tile_thief目录
+```
+python .\src\server.py 
+```
+### 4.2 websocket客户端安装启动
+
+打开chrome webstore 搜索websockets,如下图  安装 webSocketTestClient
+![](./doc/webstore.png)
+
+然后打开插件 ![websockets](./doc/plugin.png)
+
+打开 ws://localhost:6789/user
+输入 Request命令即可执行测试任务
+![](./doc/test.png)

@@ -479,7 +479,7 @@ int CLibGEHelper::Get(const std::string & strUrl, std::string & strResponse, boo
 	}
 #endif	
 
-	//http请求头
+	//https请求头
 	struct curl_slist *headers = NULL;
 	//headers = curl_slist_append(headers, "User-Agent: GoogleEarth/7.1.1.1580(Windows; Microsoft Windows(6.1.7601.1);zh-Hans;kml:2.2;client:Free;type:default)");
 	headers = curl_slist_append(headers, "Accept: text/plain, text/html, text/xml, text/xml-external-parsed-entity, application/octet-stream, application/vnd.google-earth.kml+xml, application/vnd.google-earth.kmz, image/*");
@@ -508,6 +508,8 @@ int CLibGEHelper::Get(const std::string & strUrl, std::string & strResponse, boo
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3);
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);//设定为不验证证书和HOST 
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
 	int res = curl_easy_perform(curl);
 	if (res == CURLE_OK)
 	{
@@ -538,7 +540,7 @@ int CLibGEHelper::Post(const std::string & strUrl, const char* szPost, int postS
 	}
 #endif	
 
-	//http请求头
+	//https请求头
 	struct curl_slist *headers = NULL;
 	//headers = curl_slist_append(headers, "User-Agent: GoogleEarth/7.1.1.1580(Windows; Microsoft Windows(6.1.7601.1);zh-Hans;kml:2.2;client:Free;type:default)");
 	headers = curl_slist_append(headers, "Accept: text/plain, text/html, text/xml, text/xml-external-parsed-entity, application/octet-stream, application/vnd.google-earth.kml+xml, application/vnd.google-earth.kmz, image/*");
@@ -1036,7 +1038,7 @@ QuadTreePacket16* CLibGEHelper::getTmQuadtree(const char* baseGEName, int versio
 	std::stringstream ssUrl;
 	std::stringstream ssKey;
 	ssKey << "qp-" << baseGEName << "-q." << (version <= 0 ? _tm_version : version);
-	ssUrl << "http://khmdb.google.com/flatfile?db=tm&" << ssKey.str();
+	ssUrl << "https://khmdb.google.com/flatfile?db=tm&" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_QUADTREE);
 	if (strResponse.empty())
 		return nullptr;
@@ -1146,7 +1148,7 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	std::stringstream ssUrl;
 	std::stringstream ssKey;
 	ssKey << "f1-" << name << "-i." << version;
-	ssUrl << "http://" << randomServerURL() << "/flatfile?" << ssKey.str();
+	ssUrl << "https://" << randomServerURL() << "/flatfile?" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_IMAGE);
 	if (strResponse.empty()) {
 		int cnt = 3;
@@ -1238,7 +1240,7 @@ std::string CLibGEHelper::getHistoryImage(const char* name, const std::string &v
 	std::stringstream ssUrl;
 	std::stringstream ssKey;
 	ssKey << "f1-" << name << "-i." << version << "-" << date_hex;
-	ssUrl << "http://khmdb.google.com/flatfile?db=tm&" << ssKey.str();
+	ssUrl << "https://khmdb.google.com/flatfile?db=tm&" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_HISTORY_IMAGE);
 	if (strResponse.empty()) {
 		int cnt = 3;
@@ -1820,7 +1822,7 @@ std::string CLibGEHelper::getTerrain(const char* name, int version, int* pCols, 
 	std::stringstream ssUrl;
 	std::stringstream ssKey;
 	ssKey << "f1c-" << newName << "-t." << version;
-	ssUrl << "http://" << randomServerURL() << "/flatfile?" << ssKey.str();
+	ssUrl << "https://" << randomServerURL() << "/flatfile?" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_TERRAIN);
 	if (strResponse.empty()) {
 		int cnt = 3;

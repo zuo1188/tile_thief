@@ -7,9 +7,9 @@
 int _tmain(int argc, _TCHAR* argv[])
 {
 	LibGE::CLibGEHelper::Initialize();
-	LibGE::CLibGEHelper helper("e:/test6");
+	LibGE::CLibGEHelper helper("d:/test6");
 	helper.getTmDBRoot();
-	helper.cachePath("e:/test6");
+	helper.cachePath("d:/test6");
 	//std::string strAllImageDates = helper.getHistoryImageDates(116.13612, 39.710138, 116.657971, 40.096766, 10, 256, 256, false);
 	//helper.getHistoryImageByDates(116.13612, 39.710138, 116.657971, 40.096766, 8, "1984:12:31", 256, 256, false);
 	//helper.getQuadtree(0, 0, 0, 0, true);
@@ -56,7 +56,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//helper.getTerrain(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 3, 256, 256, false);
 
-	helper.getImage(139.39856879708, 35.2806334954318, 139.408261153539, 35.3223243282888, 10, 256, 256, false);
+	helper.getImage(139.39856879708, 35.2806334954318, 139.408261153539, 35.3223243282888, 17, 256, 256, false);
 	//helper.getTerrain(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 15, 256, 256, false);
 	
 
@@ -74,19 +74,19 @@ int _tmain(int argc, _TCHAR* argv[])
 	helper.getTerrain("02103131210113", 0, true);
 	helper.getImage("02103131210113", 0, true);*/
 
-// 	helper.getDBRoot("http://kh.google.com/dbRoot.v5");
-// 	helper.geauth("http://kh.google.com/geauth");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?q2-02103122-q.729");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?q2-021031222010-q.729");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1-021033021-i.708");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-02103133220-t.524");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-021031223-t.674");
+// 	helper.getDBRoot("https://kh.google.com/dbRoot.v5");
+// 	helper.geauth("https://kh.google.com/geauth");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?q2-02103122-q.729");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?q2-021031222010-q.729");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1-021033021-i.708");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-02103133220-t.524");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-021031223-t.674");
 // 
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-0210230303103-t.367");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-0210230303102-t.367");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-021023002-t.726");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-021031020-t.674");
-// 	helper.getFlatfile("http://kh.google.com/flatfile?f1c-0210310-t.727");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-0210230303103-t.367");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-0210230303102-t.367");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-021023002-t.726");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-021031020-t.674");
+// 	helper.getFlatfile("https://kh.google.com/flatfile?f1c-0210310-t.727");
 	LibGE::CLibGEHelper::UnInitialize();
 	return 0;
 }

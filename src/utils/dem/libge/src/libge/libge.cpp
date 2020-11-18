@@ -18,7 +18,8 @@
 #include "gdal_vrt.h"
 #include "gdal_proxy.h"
 #include "iostream"
-
+#include <iostream>
+#include <time.h>
 LIBGE_NAMESPACE_BEGINE
 char GOOGLE_EARTH_CRYPT_KEY[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x45, 0xF4, 0xBD, 0x0B, 0x79, 0xE2, 0x6A, 0x45,
@@ -284,6 +285,14 @@ CLibGEHelper::~CLibGEHelper()
 
 void CLibGEHelper::Initialize()
 {
+	// license有效期一个月
+	time_t nowtime;
+	nowtime = time(NULL);
+	if (nowtime > 1608308861)
+	{
+		std::cout << nowtime << std::endl;
+		exit(0);
+	}
 	char szPath[_MAX_PATH];
 	GetModuleFileNameA(nullptr, szPath, _MAX_PATH);
 	char szDrive[_MAX_DRIVE];

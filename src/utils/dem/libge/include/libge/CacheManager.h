@@ -68,7 +68,7 @@ public:
 	std::string GetHistoryImageVersionInfo(const std::string& name, ETableType type);
 
 	bool AddProgress(long id, long level, const std::string& progress, ETableType type);
-	bool AddImageDowndDetailInfo(long id, const std::string &zxy, const std::string &bbox, const std::string &download_status);
+	bool AddImageDowndDetailInfo(long id, long level, const std::string &zxy, const std::string &bbox, const std::string &download_status);
 
 protected:
 	sqlite3* _open(const char* lpszFile);

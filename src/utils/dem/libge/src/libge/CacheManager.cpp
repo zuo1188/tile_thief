@@ -123,7 +123,7 @@ sqlite3* CacheManager::_open(const char* lpszFile)
 
 		{ 
 			std::stringstream ssSQL;
-			ssSQL << "CREATE TABLE TImageDownloadDetailInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, zxy TEXT, bbox TEXT, download_status TEXT)";
+			ssSQL << "CREATE TABLE TImageDownloadDetailInfo (id INTEGER PRIMARY KEY AUTOINCREMENT, level INTEGER, zxy TEXT, bbox TEXT, download_status TEXT)";
 			rc = sqlite3_exec(pSqlite, ssSQL.str().c_str(), NULL, NULL, &errMsg);
 			if (rc != SQLITE_OK)
 			{
@@ -623,23 +623,38 @@ std::string CacheManager::GetFaltfile(const std::string& url, ETableType type)
 
 bool CacheManager::AddProgress(long id, long level, const std::string& progress, ETableType type)
 {
+	std::string data;
 	if (m_pSqlite == NULL)
 		return false;
 
+	std::stringstream ssSQL;
+	ssSQL << "SELECT * FROM TProgress WHERE level=" << level << "";
+	sqlite3_stmt* stmt = SQLExec(ssSQL.str().c_str(), nullptr);
+	if (stmt != nullptr)
+	{
+		int size = sqlite3_column_bytes(stmt, 0);
+		if (size > 0)
+		{
+			std::stringstream ssSQL;
+			ssSQL << "Update TProgress SET progress='" << progress << "'  WHERE level="  << level;
+			return ExecNoQuery(ssSQL.str().c_str(), nullptr);
+		}
+	}
+
 	{
 		std::stringstream ssSQL;
-		ssSQL << "Insert into TProgress(id, progress) values(" << id << ",'" << progress << "')";
+		ssSQL << "Insert into TProgress(id, level, progress) values(" << id << "," << level << ",'" << progress << "')";
 		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
 	}
 }
 
-bool CacheManager::AddImageDowndDetailInfo(long id, const std::string &zxy, const std::string &bbox, const std::string &download_status) {
+bool CacheManager::AddImageDowndDetailInfo(long id, long level, const std::string &zxy, const std::string &bbox, const std::string &download_status) {
 	if (m_pSqlite == NULL)
 		return false;
 
 	{
 		std::stringstream ssSQL;
-		ssSQL << "Insert into TImageDownloadDetailInfo(id, zxy, bbox, download_status) values(" << id << ",'" << zxy << "','" << bbox << "','" << download_status << "')";
+		ssSQL << "Insert into TImageDownloadDetailInfo(id, level, zxy, bbox, download_status) values(" << id << "," << level << ",'" << zxy << "','" << bbox << "','" << download_status << "')";
 		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
 	}
 }

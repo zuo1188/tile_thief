@@ -1336,6 +1336,7 @@ long CLibGEHelper::getImageNums(double minX, double minY, double maxX, double ma
 
 struct DownloadDetailInfo{
 	long id;
+	long level;
 	std::string zxy;
 	std::string bbox;
 	std::string download_status;
@@ -1394,12 +1395,17 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	for (int i = 0; i < names.size(); i++)
 	{
 		processed_num++;
-		//向sqlite更新进度
+		//向sqlite更新进度以及下载详细信息
 		if (processed_num % 20 == 0) {
 			record_id++;
 			std::stringstream ss;
 			ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << processed_num-1;
 			CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
+			//
+			for (auto &d : download_detail_infos) {
+				CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+			}
+			download_detail_infos.clear();
 		}
 		//
 		std::string name = names.at(i);
@@ -1424,6 +1430,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		if ((_access(imgFilePath.c_str(), 0)) != -1) {
 			DownloadDetailInfo download_detail_info;
 			download_detail_info.id = i;
+			download_detail_info.level = level;
 			download_detail_info.zxy = zxy;
 			download_detail_info.bbox = str_bbox;
 			download_detail_info.download_status = "already_downloaded";
@@ -1449,6 +1456,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			//
 			DownloadDetailInfo download_detail_info;
 			download_detail_info.id = i;
+			download_detail_info.level = level;
 			download_detail_info.zxy = zxy;
 			download_detail_info.bbox = str_bbox;
 			download_detail_info.download_status = imgData;
@@ -1460,6 +1468,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		//
 		DownloadDetailInfo download_detail_info;
 		download_detail_info.id = i;
+		download_detail_info.level = level;
 		download_detail_info.zxy = zxy;
 		download_detail_info.bbox = str_bbox;
 		download_detail_info.download_status = "ok";
@@ -1574,7 +1583,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	}
 
 	for (auto &d : download_detail_infos) {
-		CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.zxy, d.bbox, d.download_status);
+		CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
 	}
 
 	/*std::string imgData;

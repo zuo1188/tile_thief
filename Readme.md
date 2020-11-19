@@ -9,7 +9,7 @@ https://www.runoob.com/python/python-install.html
 
 1.2 运行库安装
 
-先安装gdal和rasterio开发库，离线安装whl文件：https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio
+先安装gdal和rasterio开发库，离线安装whl文件在install目录也可以从这里下载：https://www.lfd.uci.edu/~gohlke/pythonlibs/#rasterio
 碰到缺什么，直接pip install 就可以了（国内网络建议使用清华或豆瓣pypi地址）
 ``` bash
 pip install ****
@@ -307,3 +307,19 @@ python .\src\server.py
 打开 ws://localhost:6789/user
 输入 Request命令即可执行测试任务
 ![](./doc/test.png)
+
+### 5 Google Earth 结果统计和进度查看
+
+#### 5.1 进度查看
+
+进度记录表：字段id progress
+progress字段取值说明：1_0_1_1         总数_成功个数_失败个数_已处理个数
+![](./doc/progress1.png)
+
+#### 5.2 瓦片统计结果查看
+
+瓦片详细信息表： 字段id、zxy、bbox、download_status
+zxy ： 瓦片编号
+bbox: 瓦片坐标范围
+download_status : 瓦片下载状态，取值包括 ok、get_qtree_failed、get_version_failed、already_downloaded
+![](./doc/progress2.png)

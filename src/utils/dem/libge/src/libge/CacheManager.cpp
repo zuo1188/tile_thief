@@ -112,7 +112,7 @@ sqlite3* CacheManager::_open(const char* lpszFile)
 
 		{
 			std::stringstream ssSQL;
-			ssSQL << "CREATE TABLE TProgress (id INTEGER PRIMARY KEY AUTOINCREMENT, progress TEXT)";
+			ssSQL << "CREATE TABLE TProgress (id INTEGER PRIMARY KEY AUTOINCREMENT, level INTEGER, progress TEXT)";
 			rc = sqlite3_exec(pSqlite, ssSQL.str().c_str(), NULL, NULL, &errMsg);
 			if (rc != SQLITE_OK)
 			{
@@ -621,7 +621,7 @@ std::string CacheManager::GetFaltfile(const std::string& url, ETableType type)
 	return data;
 }
 
-bool CacheManager::AddProgress(long id, const std::string& progress, ETableType type)
+bool CacheManager::AddProgress(long id, long level, const std::string& progress, ETableType type)
 {
 	if (m_pSqlite == NULL)
 		return false;

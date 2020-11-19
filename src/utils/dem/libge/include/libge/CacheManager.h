@@ -67,7 +67,7 @@ public:
 	bool AddHistoryImageVersionInfo(const std::string& name, const std::string data, ETableType type);
 	std::string GetHistoryImageVersionInfo(const std::string& name, ETableType type);
 
-	bool AddProgress(long id, const std::string& progress, ETableType type);
+	bool AddProgress(long id, long level, const std::string& progress, ETableType type);
 	bool AddImageDowndDetailInfo(long id, const std::string &zxy, const std::string &bbox, const std::string &download_status);
 
 protected:

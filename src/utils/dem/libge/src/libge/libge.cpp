@@ -1399,7 +1399,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			record_id++;
 			std::stringstream ss;
 			ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << processed_num-1;
-			CacheManager::GetInstance().AddProgress(record_id, ss.str(), CacheManager::TYPE_PROGRESS);
+			CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 		}
 		//
 		std::string name = names.at(i);
@@ -1570,7 +1570,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		record_id++;
 		std::stringstream ss;
 		ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << total_num;
-		CacheManager::GetInstance().AddProgress(record_id, ss.str(), CacheManager::TYPE_PROGRESS);
+		CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 	}
 
 	for (auto &d : download_detail_infos) {

@@ -20,6 +20,9 @@
 #include "iostream"
 #include <iostream>
 #include <time.h>
+
+using namespace std;
+
 LIBGE_NAMESPACE_BEGINE
 char GOOGLE_EARTH_CRYPT_KEY[] = {
 	0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x45, 0xF4, 0xBD, 0x0B, 0x79, 0xE2, 0x6A, 0x45,
@@ -255,8 +258,10 @@ CLibGEHelper::CLibGEHelper(std::string cache_path)
 #endif
 	_cachePath = cache_path;
 	std::cout << "_cachePath : " << _cachePath << std::endl;
+	_mkdir(_cachePath.c_str());
 
 	std::string cacheDBPath = _cachePath + "\\progress.db";
+	std::remove(cacheDBPath.c_str());
 	CacheManager::GetInstance().Open(cacheDBPath.c_str());
 
 	memset(_crypt_key, 0, sizeof(_crypt_key));
@@ -701,8 +706,10 @@ bool CLibGEHelper::getTmDBRoot()
 	ssUrl << "http://khmdb.google.com/dbRoot.v5?db=tm&hl=en-GB&gl=US";
 	std::string strResponse;
 	int res = Get(ssUrl.str(), strResponse, false);
-	if (res != CURLE_OK)
+	if (res != CURLE_OK) {
+		cout << "Your ip may be blocked by google" << endl;
 		return false;
+	}
 
 	if (strResponse.empty() || strResponse.size() <= 1024)
 		return false;
@@ -1136,8 +1143,8 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	{
 		version = getVersion(name, CacheManager::TYPE_IMAGE);
 		if (version == 999999) {
-			//重试3次
-			int cnt = 3;
+			//重试1次
+			int cnt = 0;
 			while (cnt--) {
 				version = getVersion(name, CacheManager::TYPE_IMAGE);
 				if (version != 999999) {
@@ -1351,6 +1358,13 @@ struct DownloadDetailInfo{
 	std::string download_status;
 };
 
+std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double maxY, unsigned int minz, unsigned int maxz) {
+	for (int i = minz; i < maxz; ++i) {
+		getImage(minX, minY, maxX, maxY, i, 256, 256, false);
+	}
+	return "ok";
+}
+
 std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double maxY, unsigned int level, unsigned int rasterXSize, unsigned int rasterYSize, bool is_mercator)
 {
 	std::vector<std::string> names = ConvertToQtNode(minY, minX, maxY, maxX, level, is_mercator);
@@ -1401,9 +1415,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	long record_id = 0;
 	//
 	std::vector<DownloadDetailInfo> download_detail_infos;
-	for (int i = 0; i < names.size(); i++)
+	for (int i = 0; i < total_num; i++)
 	{
 		processed_num++;
+		cout << "\n" <<processed_num << "/" << total_num << endl;
 		//向sqlite更新进度以及下载详细信息
 		if (processed_num % 20 == 0) {
 			record_id++;
@@ -1428,6 +1443,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		//
 		std::stringstream ssEncodePath;
 		ssEncodePath << _cachePath << "\\" << level << "\\" << x << "\\" << y << ".jpg";
+		cout << ssEncodePath.str()<<endl;
 		//
 		double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
 		unsigned int tmplevel;
@@ -1437,6 +1453,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		std::string zxy = std::to_string(level) + "_" + std::to_string(y) + "_" + std::to_string(y);
 		auto imgFilePath = ssEncodePath.str();
 		if ((_access(imgFilePath.c_str(), 0)) != -1) {
+			cout << "already downloaded" << endl;
 			DownloadDetailInfo download_detail_info;
 			download_detail_info.id = i;
 			download_detail_info.level = level;
@@ -1449,9 +1466,11 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		//
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
+			if (!getTmDBRoot()) return false;
 			download_missing_num++;
 			std::cout << "get_version_failed" << std::endl;
 		} else if (imgData == "get_qtree_failed") {
+			if (!getTmDBRoot()) return false;
 			download_failed_num++;
 			std::cout << "get_qtree_failed" << std::endl;
 		} else if (imgData == "no_disk_space") {
@@ -2189,8 +2208,14 @@ std::string CLibGEHelper::getFlatfile(const std::string& url, const std::string&
 //#ifdef _DEBUG
 		printf("getFlatfile %s: %s\r\n", ((res == CURLE_OK && !strResponse.empty()) ? "Success" : "Failed"), url.c_str());
 //#endif
-		if (res != CURLE_OK)
-			return "";
+		if (res != CURLE_OK) {
+			geauth();
+			int res = Get(url, strResponse, true);
+			printf("getFlatfile %s: %s\r\n", ((res == CURLE_OK && !strResponse.empty()) ? "Success" : "Failed"), url.c_str());
+			if (res != CURLE_OK) {
+				return "";
+			}
+		}
 
 		CacheManager::GetInstance().AddFaltfile(key, strResponse, type);
 	}

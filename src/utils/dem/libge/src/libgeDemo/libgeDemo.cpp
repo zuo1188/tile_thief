@@ -4,12 +4,15 @@
 #include "stdafx.h"
 #include "libge.h"
 
+using namespace std;
+
 int _tmain(int argc, _TCHAR* argv[])
 {
+	string cache_dir = "d:/test8";
 	LibGE::CLibGEHelper::Initialize();
-	LibGE::CLibGEHelper helper("d:/test6");
-	helper.getTmDBRoot();
-	helper.cachePath("d:/test6");
+	LibGE::CLibGEHelper helper(cache_dir);
+	if (!helper.getTmDBRoot()) return false;
+	helper.cachePath(cache_dir);
 	//std::string strAllImageDates = helper.getHistoryImageDates(116.13612, 39.710138, 116.657971, 40.096766, 10, 256, 256, false);
 	//helper.getHistoryImageByDates(116.13612, 39.710138, 116.657971, 40.096766, 8, "1984:12:31", 256, 256, false);
 	//helper.getQuadtree(0, 0, 0, 0, true);
@@ -56,9 +59,10 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	//helper.getTerrain(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 3, 256, 256, false);
 
-	helper.getImage(139.39856879708, 35.2806334954318, 139.408261153539, 35.3223243282888, 17, 256, 256, false);
+	/*helper.getImage(139.39856879708, 35.2806334954318, 139.408261153539, 35.3223243282888, 17, 256, 256, false);*/
 	//helper.getTerrain(106.4753723144531250, 29.5243835449218750, 106.5769958496093750, 29.6150207519531250, 15, 256, 256, false);
-	
+
+	helper.getImage(-5.455399829862814, 35.88009676369958, -5.266940198579367, 36.11672539927243, 3, 16);
 
 	/*helper.getImage("0", 0, true);
 

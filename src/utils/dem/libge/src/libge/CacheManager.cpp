@@ -643,7 +643,7 @@ bool CacheManager::AddProgress(long id, long level, const std::string& progress,
 
 	{
 		std::stringstream ssSQL;
-		ssSQL << "Insert into TProgress(id, level, progress) values(" << id << "," << level << ",'" << progress << "')";
+		ssSQL << "Insert into TProgress(level, progress) values(" << level << ",'" << progress << "')";
 		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
 	}
 }
@@ -654,7 +654,7 @@ bool CacheManager::AddImageDowndDetailInfo(long id, long level, const std::strin
 
 	{
 		std::stringstream ssSQL;
-		ssSQL << "Insert into TImageDownloadDetailInfo(id, level, zxy, bbox, download_status) values(" << id << "," << level << ",'" << zxy << "','" << bbox << "','" << download_status << "')";
+		ssSQL << "Insert into TImageDownloadDetailInfo(level, zxy, bbox, download_status) values(" << level << ",'" << zxy << "','" << bbox << "','" << download_status << "')";
 		return ExecNoQuery(ssSQL.str().c_str(), nullptr);
 	}
 }

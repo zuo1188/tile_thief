@@ -1359,7 +1359,7 @@ struct DownloadDetailInfo{
 };
 
 std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double maxY, unsigned int minz, unsigned int maxz) {
-	for (int i = minz; i < maxz; ++i) {
+	for (int i = minz; i <= maxz; ++i) {
 		getImage(minX, minY, maxX, maxY, i, 256, 256, false);
 	}
 	return "ok";
@@ -1488,7 +1488,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			return "no_disk_space";
 		}
 		//
-		if (imgData.size() <= 0 || imgData == "get_version_failed" || imgData == "get_qtree_failed") {
+		if (imgData.size() <= 0 || imgData == "get_version_failed" || imgData == "get_qtree_failed" || imgData == "get_img_failed") {
 			std::cout << "get " << name << " failed" << std::endl;
 			is_all_ok = false;
 			//
@@ -1499,6 +1499,13 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			download_detail_info.bbox = str_bbox;
 			download_detail_info.download_status = imgData;
 			download_detail_infos.push_back(download_detail_info);
+			//
+			if (processed_num == total_num){
+				std::stringstream ss;
+				ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << total_num;
+				CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
+			}
+			//
 			continue;
 		}
 		//
@@ -1616,7 +1623,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	{
 		record_id++;
 		std::stringstream ss;
-		ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << processed_num - 1;
+		ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << total_num;
 		CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 	}
 

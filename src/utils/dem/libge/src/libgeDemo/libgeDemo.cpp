@@ -8,7 +8,7 @@ using namespace std;
 
 int _tmain(int argc, _TCHAR* argv[])
 {
-	string cache_dir = "d:/test8";
+	string cache_dir = "d:/test9";
 	LibGE::CLibGEHelper::Initialize();
 	LibGE::CLibGEHelper helper(cache_dir);
 	if (!helper.getTmDBRoot()) return false;
@@ -64,6 +64,7 @@ int _tmain(int argc, _TCHAR* argv[])
 
 	helper.getImage(-5.455399829862814, 35.88009676369958, -5.266940198579367, 36.11672539927243, 3, 16);
 
+	//helper.getImage(15888, 13109, 15, 0);
 	/*helper.getImage("0", 0, true);
 
 	helper.getTerrain("0210313121011", 0, true);

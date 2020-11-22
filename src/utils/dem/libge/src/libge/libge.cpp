@@ -707,7 +707,7 @@ bool CLibGEHelper::getTmDBRoot()
 	std::string strResponse;
 	int res = Get(ssUrl.str(), strResponse, false);
 	if (res != CURLE_OK) {
-		cout << "Your ip may be blocked by google" << endl;
+		cout << "Your ip may be blocked by google. test url: http://khmdb.google.com/dbRoot.v5?db=tm&hl=en-GB&gl=US" << endl;
 		return false;
 	}
 
@@ -1167,7 +1167,7 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	ssUrl << "https://" << randomServerURL() << "/flatfile?" << ssKey.str();
 	std::string strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_IMAGE);
 	if (strResponse.empty()) {
-		int cnt = 3;
+		int cnt = 0;
 		while (cnt--) {
 			strResponse = getFlatfile(ssUrl.str(), ssKey.str().c_str(), CacheManager::TYPE_IMAGE);
 			if (strResponse != "") {
@@ -1405,10 +1405,12 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	long total_num = names.size();
 	//下载成功的瓦片数量
 	long download_ok_num = 0;
-	//下载失败的瓦片数量
-	long download_failed_num = 0;
-	//缺失的瓦片数量
-	long download_missing_num = 0;
+	//下载qtree失败的瓦片数量
+	long get_qtree_failed_num = 0;
+	//从qtree获取version失败的瓦片数量
+	long get_version_failed_num = 0;
+	//下载image失败的瓦片数量
+	long get_image_failed_num = 0;
 	//已处理过的瓦片数量
 	long processed_num = 0;
 	//
@@ -1419,11 +1421,15 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	{
 		processed_num++;
 		cout << "\n" <<processed_num << "/" << total_num << endl;
+		if (processed_num%100==0) 
+		{
+			Sleep(5 * 1000);
+		}
 		//向sqlite更新进度以及下载详细信息
 		if (processed_num % 20 == 0) {
 			record_id++;
 			std::stringstream ss;
-			ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << processed_num-1;
+			ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << processed_num - 1;
 			CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 			//
 			for (auto &d : download_detail_infos) {
@@ -1467,12 +1473,16 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
 			if (!getTmDBRoot()) return false;
-			download_missing_num++;
+			get_version_failed_num++;
 			std::cout << "get_version_failed" << std::endl;
 		} else if (imgData == "get_qtree_failed") {
 			if (!getTmDBRoot()) return false;
-			download_failed_num++;
+			get_qtree_failed_num++;
 			std::cout << "get_qtree_failed" << std::endl;
+		} else if (imgData == "get_img_failed") {
+			if (!getTmDBRoot()) return false;
+			get_image_failed_num++;
+			std::cout << "get_img_failed" << std::endl;
 		} else if (imgData == "no_disk_space") {
 			std::cout << "no_disk_space" << std::endl;
 			return "no_disk_space";
@@ -1606,7 +1616,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	{
 		record_id++;
 		std::stringstream ss;
-		ss << total_num << "_" << download_ok_num << "_" << download_failed_num << "_" << total_num;
+		ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << processed_num - 1;
 		CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 	}
 
@@ -1638,6 +1648,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		return "ok";
 	}
 	//
+	if (!getTmDBRoot()) return "ip_blocked";
 	return "error";
 	//return imgData;
 }
@@ -2210,6 +2221,7 @@ std::string CLibGEHelper::getFlatfile(const std::string& url, const std::string&
 //#endif
 		if (res != CURLE_OK) {
 			geauth();
+			if (!getTmDBRoot()) return "";
 			int res = Get(url, strResponse, true);
 			printf("getFlatfile %s: %s\r\n", ((res == CURLE_OK && !strResponse.empty()) ? "Success" : "Failed"), url.c_str());
 			if (res != CURLE_OK) {

@@ -271,7 +271,7 @@ def download_ge_data(opts):
             if result['download_status'] != "success":
                 opts.worker_dict["error_message"] = opts.worker_dict["error_message"] + [result["tile_info"]["error_message"]]
                 error_message = result["tile_info"]["error_message"]
-                if error_message.find("no_disk_space") != -1 or error_message.find("Your IP may be blocked by google, Please check!") != -1:
+                if error_message.find("no_disk_space") != -1 or error_message.find("blocked") != -1:
                     opts.worker_dict["progress_value"] = -1
                     cancle_task(opts.worker_dict)
                 else:

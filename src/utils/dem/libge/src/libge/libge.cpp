@@ -261,7 +261,7 @@ CLibGEHelper::CLibGEHelper(std::string cache_path)
 	_mkdir(_cachePath.c_str());
 
 	std::string cacheDBPath = _cachePath + "\\progress.db";
-	std::remove(cacheDBPath.c_str());
+	//std::remove(cacheDBPath.c_str());
 	CacheManager::GetInstance().Open(cacheDBPath.c_str());
 
 	memset(_crypt_key, 0, sizeof(_crypt_key));
@@ -1432,10 +1432,13 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << processed_num - 1;
 			CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 			//
-			for (auto &d : download_detail_infos) {
-				CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+			if (!download_detail_infos.empty()) {
+				for (int i = 0; i < download_detail_infos.size(); ++i) {
+					auto d = download_detail_infos[i];
+					CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+				}
+				download_detail_infos.clear();
 			}
-			download_detail_infos.clear();
 		}
 		//
 		std::string name = names.at(i);
@@ -1460,6 +1463,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		auto imgFilePath = ssEncodePath.str();
 		if ((_access(imgFilePath.c_str(), 0)) != -1) {
 			cout << "already downloaded" << endl;
+			download_ok_num++;
 			DownloadDetailInfo download_detail_info;
 			download_detail_info.id = i;
 			download_detail_info.level = level;
@@ -1627,9 +1631,14 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 	}
 
-	for (auto &d : download_detail_infos) {
-		CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+	if (!download_detail_infos.empty()) {
+		for (int i = 0; i < download_detail_infos.size(); ++i) {
+			auto d = download_detail_infos[i];
+			CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+		}
+		download_detail_infos.clear();
 	}
+	
 
 	/*std::string imgData;
 	if (GDALGetRasterCount(hVRTDS) > 0)

@@ -652,6 +652,20 @@ bool CacheManager::AddImageDowndDetailInfo(long id, long level, const std::strin
 	if (m_pSqlite == NULL)
 		return false;
 
+	std::stringstream ssSQL;
+	ssSQL << "SELECT * FROM TImageDownloadDetailInfo WHERE zxy='" << zxy << "'";
+	sqlite3_stmt* stmt = SQLExec(ssSQL.str().c_str(), nullptr);
+	if (stmt != nullptr)
+	{
+		int size = sqlite3_column_bytes(stmt, 0);
+		if (size > 0)
+		{
+			std::stringstream ssSQL;
+			ssSQL << "Update TImageDownloadDetailInfo SET download_status='" << download_status << "'  WHERE zxy='" << zxy << "'";
+			return ExecNoQuery(ssSQL.str().c_str(), nullptr);
+		}
+	}
+
 	{
 		std::stringstream ssSQL;
 		ssSQL << "Insert into TImageDownloadDetailInfo(level, zxy, bbox, download_status) values(" << level << ",'" << zxy << "','" << bbox << "','" << download_status << "')";

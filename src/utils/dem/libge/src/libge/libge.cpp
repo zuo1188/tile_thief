@@ -1,4 +1,4 @@
-// libge.cpp : ¶¨Òå DLL Ó¦ÓÃ³ÌÐòµÄµ¼³öº¯Êý¡£
+// libge.cpp : ï¿½ï¿½ï¿½ï¿½ DLL Ó¦ï¿½Ã³ï¿½ï¿½ï¿½Äµï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½
 //
 
 #include "stdafx.h"
@@ -290,7 +290,7 @@ CLibGEHelper::~CLibGEHelper()
 
 void CLibGEHelper::Initialize()
 {
-	// licenseÓÐÐ§ÆÚÒ»¸öÔÂ
+	// licenseï¿½ï¿½Ð§ï¿½ï¿½Ò»ï¿½ï¿½ï¿½ï¿½
 	time_t nowtime;
 	nowtime = time(NULL);
 	if (nowtime > 1608308861)
@@ -493,7 +493,7 @@ int CLibGEHelper::Get(const std::string & strUrl, std::string & strResponse, boo
 	} */
 #endif	
 
-	//httpsÇëÇóÍ·
+	//httpsï¿½ï¿½ï¿½ï¿½Í·
 	struct curl_slist *headers = NULL;
 	//headers = curl_slist_append(headers, "User-Agent: GoogleEarth/7.1.1.1580(Windows; Microsoft Windows(6.1.7601.1);zh-Hans;kml:2.2;client:Free;type:default)");
 	headers = curl_slist_append(headers, "Accept: text/plain, text/html, text/xml, text/xml-external-parsed-entity, application/octet-stream, application/vnd.google-earth.kml+xml, application/vnd.google-earth.kmz, image/*");
@@ -516,13 +516,13 @@ int CLibGEHelper::Get(const std::string & strUrl, std::string & strResponse, boo
 	curl_easy_setopt(curl, CURLOPT_WRITEFUNCTION, OnWriteData);
 	curl_easy_setopt(curl, CURLOPT_WRITEDATA, (void *)&strResponse);
 	/**
-	* µ±¶à¸öÏß³Ì¶¼Ê¹ÓÃ³¬Ê±´¦ÀíµÄÊ±ºò£¬Í¬Ê±Ö÷Ïß³ÌÖÐÓÐsleep»òÊÇwaitµÈ²Ù×÷¡£
-	* Èç¹û²»ÉèÖÃÕâ¸öÑ¡Ïî£¬libcurl½«»á·¢ÐÅºÅ´ò¶ÏÕâ¸öwait´Ó¶øµ¼ÖÂ³ÌÐòÍË³ö¡£
+	* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ß³Ì¶ï¿½Ê¹ï¿½Ã³ï¿½Ê±ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ê±ï¿½ï¿½Í¬Ê±ï¿½ï¿½ï¿½ß³ï¿½ï¿½ï¿½ï¿½ï¿½sleepï¿½ï¿½ï¿½ï¿½waitï¿½È²ï¿½ï¿½ï¿½ï¿½ï¿½
+	* ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ñ¡ï¿½î£¬libcurlï¿½ï¿½ï¿½á·¢ï¿½ÅºÅ´ï¿½ï¿½ï¿½ï¿½ï¿½waitï¿½Ó¶ï¿½ï¿½ï¿½ï¿½Â³ï¿½ï¿½ï¿½ï¿½Ë³ï¿½ï¿½ï¿½
 	*/
 	curl_easy_setopt(curl, CURLOPT_NOSIGNAL, 1);
 	curl_easy_setopt(curl, CURLOPT_CONNECTTIMEOUT, 3);
 	curl_easy_setopt(curl, CURLOPT_TIMEOUT, 3);
-	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);//Éè¶¨Îª²»ÑéÖ¤Ö¤ÊéºÍHOST 
+	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYPEER, false);//ï¿½è¶¨Îªï¿½ï¿½ï¿½ï¿½Ö¤Ö¤ï¿½ï¿½ï¿½HOST 
 	curl_easy_setopt(curl, CURLOPT_SSL_VERIFYHOST, false);
 	int res = curl_easy_perform(curl);
 	if (res == CURLE_OK)
@@ -555,7 +555,7 @@ int CLibGEHelper::Post(const std::string & strUrl, const char* szPost, int postS
 	}
 #endif	
 
-	//httpsÇëÇóÍ·
+	//httpsï¿½ï¿½ï¿½ï¿½Í·
 	struct curl_slist *headers = NULL;
 	//headers = curl_slist_append(headers, "User-Agent: GoogleEarth/7.1.1.1580(Windows; Microsoft Windows(6.1.7601.1);zh-Hans;kml:2.2;client:Free;type:default)");
 	headers = curl_slist_append(headers, "Accept: text/plain, text/html, text/xml, text/xml-external-parsed-entity, application/octet-stream, application/vnd.google-earth.kml+xml, application/vnd.google-earth.kmz, image/*");
@@ -1144,7 +1144,7 @@ std::string CLibGEHelper::getImage(const char* name, int version, bool is_mercat
 	{
 		version = getVersion(name, CacheManager::TYPE_IMAGE);
 		if (version == 999999) {
-			//ÖØÊÔ1´Î
+			//ï¿½ï¿½ï¿½ï¿½1ï¿½ï¿½
 			int cnt = 0;
 			while (cnt--) {
 				version = getVersion(name, CacheManager::TYPE_IMAGE);
@@ -1404,15 +1404,15 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	bool firstDS = true;
 	bool is_all_ok = true;
 	long total_num = names.size();
-	//ÏÂÔØ³É¹¦µÄÍßÆ¬ÊýÁ¿
+	//ï¿½ï¿½ï¿½Ø³É¹ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 	long download_ok_num = 0;
-	//ÏÂÔØqtreeÊ§°ÜµÄÍßÆ¬ÊýÁ¿
+	//ï¿½ï¿½ï¿½ï¿½qtreeÊ§ï¿½Üµï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 	long get_qtree_failed_num = 0;
-	//´Óqtree»ñÈ¡versionÊ§°ÜµÄÍßÆ¬ÊýÁ¿
+	//ï¿½ï¿½qtreeï¿½ï¿½È¡versionÊ§ï¿½Üµï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 	long get_version_failed_num = 0;
-	//ÏÂÔØimageÊ§°ÜµÄÍßÆ¬ÊýÁ¿
+	//ï¿½ï¿½ï¿½ï¿½imageÊ§ï¿½Üµï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 	long get_image_failed_num = 0;
-	//ÒÑ´¦Àí¹ýµÄÍßÆ¬ÊýÁ¿
+	//ï¿½Ñ´ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Æ¬ï¿½ï¿½ï¿½ï¿½
 	long processed_num = 0;
 	//
 	long record_id = 0;
@@ -1422,11 +1422,11 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	{
 		processed_num++;
 		cout << "\n" <<processed_num << "/" << total_num << endl;
-		if (processed_num%100==0) 
+		/*if (processed_num%100==0) 
 		{
 			Sleep(5 * 1000);
-		}
-		//Ïòsqlite¸üÐÂ½ø¶ÈÒÔ¼°ÏÂÔØÏêÏ¸ÐÅÏ¢
+		}*/
+		//ï¿½ï¿½sqliteï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½ï¿½Ô¼ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½Ï¸ï¿½ï¿½Ï¢
 		if (processed_num % 20 == 0) {
 			record_id++;
 			std::stringstream ss;
@@ -1447,7 +1447,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			allName = name;
 		else
 			allName += "_" + name;
-		//ÅÐ¶ÏÊÇ·ñÒÑ¾­ÏÂÔØ¹ý
+		//ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½
 		unsigned int x, y, level;
 		ConvertFromQtNode(name, &x, &y, &level);
 		//
@@ -1524,111 +1524,9 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		download_detail_info.download_status = "ok";
 		download_detail_infos.push_back(download_detail_info);
 
-		
-		double cellSizeX = (tmpMaxX - tmpMinX) / 256.0;
-		double cellSizeY = (tmpMinY - tmpMaxY) / 256.0;
-		double adfGeoTransform[6];
-		adfGeoTransform[0] = tmpMinX;
-		adfGeoTransform[1] = cellSizeX;
-		adfGeoTransform[2] = 0;
-		adfGeoTransform[3] = tmpMaxY;
-		adfGeoTransform[4] = 0;
-		adfGeoTransform[5] = cellSizeY;
-
-		std::stringstream ssMemFile;
-		ssMemFile << "/vsimem/" << name;
-		VSIFCloseL(VSIFileFromMemBuffer(ssMemFile.str().c_str(), (GByte*)(imgData._Myptr()), imgData.size(), false));
-		GDALDataset* readDS = (GDALDataset*)GDALOpen(ssMemFile.str().c_str(), GA_ReadOnly);
-		if (readDS == nullptr)
-		{
-			VSIUnlink(ssMemFile.str().c_str());
-			continue;
-		}
-
-		readDS->SetProjection(strPrj.c_str());
-		readDS->SetGeoTransform(adfGeoTransform);
-
-		GDALDataset *poMemDS = poMemDriver->CreateCopy("", readDS, false, nullptr, nullptr, nullptr);
-		GDALClose(readDS);
-		VSIUnlink(ssMemFile.str().c_str());
-		if (poMemDS == nullptr)
-			continue;
-
-		if (firstDS)
-		{
-			for (int j = 0; j < poMemDS->GetRasterCount(); j++)
-			{
-				GDALRasterBandH hBand;
-				GDALAddBand(hVRTDS, poMemDS->GetRasterBand(j + 1)->GetRasterDataType(), nullptr);
-				hBand = GDALGetRasterBand(hVRTDS, j + 1);
-				GDALSetRasterColorInterpretation(hBand, poMemDS->GetRasterBand(j + 1)->GetColorInterpretation());
-				if (poMemDS->GetRasterBand(j + 1)->GetColorInterpretation() == GCI_PaletteIndex)
-					GDALSetRasterColorTable(hBand, poMemDS->GetRasterBand(j + 1)->GetColorTable());
-
-				int hasNoDataValue = 0;
-				double noDataValue = poMemDS->GetRasterBand(j + 1)->GetNoDataValue(&hasNoDataValue);
-				if (hasNoDataValue)
-					GDALSetRasterNoDataValue(hBand, noDataValue);
-			}
-			firstDS = false;
-		}
-
-		int left = 0;
-		int top = 0;
-		int right = poMemDS->GetRasterXSize();
-		int bottom = poMemDS->GetRasterYSize();
-		if (tmpMinX < minX)
-			left = (int)(0.5 + (minX - tmpMinX) / cellSizeX);
-		if (tmpMaxX > maxX)
-			right = (int)(0.5 + (maxX - tmpMinX) / cellSizeX);
-		if (tmpMinY < minY)
-			bottom = (int)(0.5 + (tmpMaxY - minY) / -cellSizeY);
-		if (tmpMaxY > maxY)
-			top = (int)(0.5 + (tmpMaxY - maxY) / -cellSizeY);
-		left = __min(__max(0, left), poMemDS->GetRasterXSize() - 1);
-		right = __min(__max(0, right), poMemDS->GetRasterXSize());
-		top = __min(__max(0, top), poMemDS->GetRasterYSize() - 1);
-		bottom = __min(__max(0, bottom), poMemDS->GetRasterYSize());
-		if (left == right || top == bottom)
-		{
-			GDALClose(poMemDS);
-			continue;
-		}
-
-		int xoffset = (int)(0.5 + (__max(tmpMinX, minX) - minX) / resX);
-		int yoffset = (int)(0.5 + (maxY - __min(tmpMaxY, maxY)) / -resY);
-		int xoffset2 = (int)(0.5 + (__min(tmpMaxX, maxX) - minX) / resX);
-		int yoffset2 = (int)(0.5 + (maxY - __max(tmpMinY, minY)) / -resY);
-		int dest_width = xoffset2 - xoffset;// (int)(0.5 + (right - left) * cellSizeX / resX);
-		int dest_height = yoffset2 - yoffset;// (int)(0.5 + (bottom - top) * cellSizeY / resY);
-		xoffset = __min(__max(0, xoffset), rasterXSize - 1);
-		dest_width = __min(__max(0, dest_width), rasterXSize);
-		yoffset = __min(__max(0, yoffset), rasterYSize - 1);
-		dest_height = __min(__max(0, dest_height), rasterYSize);
-
-		//printf("%03ld-%03ld  %03ld-%03ld", xoffset, xoffset + dest_width - 1, yoffset, yoffset + dest_height - 1);
-		//printf("\t%03ld-%03ld  %03ld-%03ld", left, right, top, bottom);
-		//printf("\t%lf-%lf  %lf-%lf\r\n", tmpMinX, tmpMaxX, tmpMinY, tmpMaxY);
-
-		for (int j = 0; j < poMemDS->GetRasterCount(); j++)
-		{
-			VRTSourcedRasterBandH hVRTBand = (VRTSourcedRasterBandH)GDALGetRasterBand(hVRTDS, j + 1);
-
-			/* Place the raster band at the right position in the VRT */
-			VRTAddSimpleSource(hVRTBand, GDALGetRasterBand(poMemDS, j + 1),
-				left, top,
-				right - left,
-				bottom - top,
-				xoffset, yoffset,
-				dest_width, dest_height, "near",
-				VRT_NODATA_UNSET);
-		}
-		//
-		if (poMemDS != nullptr) {
-			GDALClose(poMemDS);
-		}
+				
 	}
-	//Ïòsqlite¸üÐÂ½ø¶È
+	//ï¿½ï¿½sqliteï¿½ï¿½ï¿½Â½ï¿½ï¿½ï¿½
 	{
 		record_id++;
 		std::stringstream ss;
@@ -2033,7 +1931,7 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 		else
 			allName += "_" + name;
 
-		//ÅÐ¶ÏÊÇ·ñÒÑ¾­ÏÂÔØ¹ý
+		//ï¿½Ð¶ï¿½ï¿½Ç·ï¿½ï¿½Ñ¾ï¿½ï¿½ï¿½ï¿½Ø¹ï¿½
 		unsigned int x, y, level;
 		ConvertFromQtNode(name, &x, &y, &level);
 		//

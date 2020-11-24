@@ -313,7 +313,8 @@ python .\src\server.py
 #### 5.1 进度查看
 
 进度记录表：字段id progress
-progress字段取值说明：1_0_1_1         总数_成功个数_失败个数_已处理个数
+progress字段取值说明：1_0_0_0_0         总数_成功个数_获取Qtree失败个数_查询版本不存在个数_下载图像失败_已处理个数
+
 ![](./doc/progress1.png)
 
 #### 5.2 瓦片统计结果查看
@@ -322,4 +323,5 @@ progress字段取值说明：1_0_1_1         总数_成功个数_失败个数_�
 zxy ： 瓦片编号
 bbox: 瓦片坐标范围
 download_status : 瓦片下载状态，取值包括 ok、get_qtree_failed、get_version_failed、already_downloaded
+
 ![](./doc/progress2.png)

@@ -486,11 +486,11 @@ int CLibGEHelper::Get(const std::string & strUrl, std::string & strResponse, boo
 		return CURLE_FAILED_INIT;
 
 #ifdef _DEBUG
-	if (curl != nullptr)
+	/*if (curl != nullptr)
 	{
 		curl_easy_setopt(curl, CURLOPT_VERBOSE, 1);
 		curl_easy_setopt(curl, CURLOPT_DEBUGFUNCTION, OnDebug);
-	}
+	} */
 #endif	
 
 	//https请求头
@@ -537,6 +537,7 @@ int CLibGEHelper::Get(const std::string & strUrl, std::string & strResponse, boo
 	}
 	curl_slist_free_all(headers);
 	curl_easy_cleanup(curl);
+	curl_global_cleanup();
 	return res;
 }
 
@@ -639,7 +640,7 @@ int  CLibGEHelper::getDBRoot()
 	_version = _version ^ 0x4200;
 	//printf("magic:%X  unk:%X  version: %X\r\n", _magic, _unk, _version);
 
-	std::string strXML = UnPackGEZlib(data, len - 1024);
+	/*std::string strXML = UnPackGEZlib(data, len - 1024);
 	if (!strXML.empty())
 	{
 #ifdef _DEBUG
@@ -694,7 +695,7 @@ int  CLibGEHelper::getDBRoot()
 			data = strstr(data, key.c_str());
 		}
 		CacheManager::GetInstance().Commit();
-	}
+	} */
 
 	geauth();
 	return true;
@@ -1622,6 +1623,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 				dest_width, dest_height, "near",
 				VRT_NODATA_UNSET);
 		}
+		//
+		if (poMemDS != nullptr) {
+			GDALClose(poMemDS);
+		}
 	}
 	//向sqlite更新进度
 	{
@@ -1666,7 +1671,6 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	//
 	if (!getTmDBRoot()) return "ip_blocked";
 	return "error";
-	//return imgData;
 }
 
 std::set<std::string> CLibGEHelper::strToSet(const std::string &input) {

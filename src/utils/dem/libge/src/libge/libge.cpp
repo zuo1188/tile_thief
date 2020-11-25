@@ -1474,25 +1474,25 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 			download_detail_infos.push_back(download_detail_info);
 			continue;
 		}
-		//
+		
 		std::string imgData = getImage(name.c_str(), 0, is_mercator);
 		if (imgData == "get_version_failed") {
-			if (!getTmDBRoot()) return false;
+			if (!getTmDBRoot()) return "ip_blocked";
 			get_version_failed_num++;
 			std::cout << "get_version_failed" << std::endl;
 		} else if (imgData == "get_qtree_failed") {
-			if (!getTmDBRoot()) return false;
+			if (!getTmDBRoot()) return "ip_blocked";
 			get_qtree_failed_num++;
 			std::cout << "get_qtree_failed" << std::endl;
 		} else if (imgData == "get_img_failed") {
-			if (!getTmDBRoot()) return false;
+			if (!getTmDBRoot()) return "ip_blocked";
 			get_image_failed_num++;
 			std::cout << "get_img_failed" << std::endl;
 		} else if (imgData == "no_disk_space") {
 			std::cout << "no_disk_space" << std::endl;
 			return "no_disk_space";
 		}
-		//
+		////
 		if (imgData.size() <= 0 || imgData == "get_version_failed" || imgData == "get_qtree_failed" || imgData == "get_img_failed") {
 			std::cout << "get " << name << " failed" << std::endl;
 			is_all_ok = false;
@@ -1523,110 +1523,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		download_detail_info.bbox = str_bbox;
 		download_detail_info.download_status = "ok";
 		download_detail_infos.push_back(download_detail_info);
-
 		
-		double cellSizeX = (tmpMaxX - tmpMinX) / 256.0;
-		double cellSizeY = (tmpMinY - tmpMaxY) / 256.0;
-		double adfGeoTransform[6];
-		adfGeoTransform[0] = tmpMinX;
-		adfGeoTransform[1] = cellSizeX;
-		adfGeoTransform[2] = 0;
-		adfGeoTransform[3] = tmpMaxY;
-		adfGeoTransform[4] = 0;
-		adfGeoTransform[5] = cellSizeY;
-
-		std::stringstream ssMemFile;
-		ssMemFile << "/vsimem/" << name;
-		VSIFCloseL(VSIFileFromMemBuffer(ssMemFile.str().c_str(), (GByte*)(imgData._Myptr()), imgData.size(), false));
-		GDALDataset* readDS = (GDALDataset*)GDALOpen(ssMemFile.str().c_str(), GA_ReadOnly);
-		if (readDS == nullptr)
-		{
-			VSIUnlink(ssMemFile.str().c_str());
-			continue;
-		}
-
-		readDS->SetProjection(strPrj.c_str());
-		readDS->SetGeoTransform(adfGeoTransform);
-
-		GDALDataset *poMemDS = poMemDriver->CreateCopy("", readDS, false, nullptr, nullptr, nullptr);
-		GDALClose(readDS);
-		VSIUnlink(ssMemFile.str().c_str());
-		if (poMemDS == nullptr)
-			continue;
-
-		if (firstDS)
-		{
-			for (int j = 0; j < poMemDS->GetRasterCount(); j++)
-			{
-				GDALRasterBandH hBand;
-				GDALAddBand(hVRTDS, poMemDS->GetRasterBand(j + 1)->GetRasterDataType(), nullptr);
-				hBand = GDALGetRasterBand(hVRTDS, j + 1);
-				GDALSetRasterColorInterpretation(hBand, poMemDS->GetRasterBand(j + 1)->GetColorInterpretation());
-				if (poMemDS->GetRasterBand(j + 1)->GetColorInterpretation() == GCI_PaletteIndex)
-					GDALSetRasterColorTable(hBand, poMemDS->GetRasterBand(j + 1)->GetColorTable());
-
-				int hasNoDataValue = 0;
-				double noDataValue = poMemDS->GetRasterBand(j + 1)->GetNoDataValue(&hasNoDataValue);
-				if (hasNoDataValue)
-					GDALSetRasterNoDataValue(hBand, noDataValue);
-			}
-			firstDS = false;
-		}
-
-		int left = 0;
-		int top = 0;
-		int right = poMemDS->GetRasterXSize();
-		int bottom = poMemDS->GetRasterYSize();
-		if (tmpMinX < minX)
-			left = (int)(0.5 + (minX - tmpMinX) / cellSizeX);
-		if (tmpMaxX > maxX)
-			right = (int)(0.5 + (maxX - tmpMinX) / cellSizeX);
-		if (tmpMinY < minY)
-			bottom = (int)(0.5 + (tmpMaxY - minY) / -cellSizeY);
-		if (tmpMaxY > maxY)
-			top = (int)(0.5 + (tmpMaxY - maxY) / -cellSizeY);
-		left = __min(__max(0, left), poMemDS->GetRasterXSize() - 1);
-		right = __min(__max(0, right), poMemDS->GetRasterXSize());
-		top = __min(__max(0, top), poMemDS->GetRasterYSize() - 1);
-		bottom = __min(__max(0, bottom), poMemDS->GetRasterYSize());
-		if (left == right || top == bottom)
-		{
-			GDALClose(poMemDS);
-			continue;
-		}
-
-		int xoffset = (int)(0.5 + (__max(tmpMinX, minX) - minX) / resX);
-		int yoffset = (int)(0.5 + (maxY - __min(tmpMaxY, maxY)) / -resY);
-		int xoffset2 = (int)(0.5 + (__min(tmpMaxX, maxX) - minX) / resX);
-		int yoffset2 = (int)(0.5 + (maxY - __max(tmpMinY, minY)) / -resY);
-		int dest_width = xoffset2 - xoffset;// (int)(0.5 + (right - left) * cellSizeX / resX);
-		int dest_height = yoffset2 - yoffset;// (int)(0.5 + (bottom - top) * cellSizeY / resY);
-		xoffset = __min(__max(0, xoffset), rasterXSize - 1);
-		dest_width = __min(__max(0, dest_width), rasterXSize);
-		yoffset = __min(__max(0, yoffset), rasterYSize - 1);
-		dest_height = __min(__max(0, dest_height), rasterYSize);
-
-		//printf("%03ld-%03ld  %03ld-%03ld", xoffset, xoffset + dest_width - 1, yoffset, yoffset + dest_height - 1);
-		//printf("\t%03ld-%03ld  %03ld-%03ld", left, right, top, bottom);
-		//printf("\t%lf-%lf  %lf-%lf\r\n", tmpMinX, tmpMaxX, tmpMinY, tmpMaxY);
-
-		for (int j = 0; j < poMemDS->GetRasterCount(); j++)
-		{
-			VRTSourcedRasterBandH hVRTBand = (VRTSourcedRasterBandH)GDALGetRasterBand(hVRTDS, j + 1);
-
-			/* Place the raster band at the right position in the VRT */
-			VRTAddSimpleSource(hVRTBand, GDALGetRasterBand(poMemDS, j + 1),
-				left, top,
-				right - left,
-				bottom - top,
-				xoffset, yoffset,
-				dest_width, dest_height, "near",
-				VRT_NODATA_UNSET);
-		}
-		//
-		if (poMemDS != nullptr) {
-			GDALClose(poMemDS);
-		}
 	}
 	//向sqlite更新进度
 	{
@@ -1644,26 +1541,6 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		download_detail_infos.clear();
 	}
 	
-
-	/*std::string imgData;
-	if (GDALGetRasterCount(hVRTDS) > 0)
-	{
-	const char *pszFormat = "JPEG";
-	GDALDriver *poDriver = GetGDALDriverManager()->GetDriverByName(pszFormat);
-	std::string outName = "/vsimem/" + base64_encode((const unsigned char*)allName.c_str(), allName.size()) + ".jpg";
-	GDALDatasetH hOutDS = GDALCreateCopy(poDriver, outName.c_str(), hVRTDS, false, nullptr, nullptr, nullptr);
-	GDALClose(hOutDS);
-	vsi_l_offset outDataLength = 0;
-	int bUnlinkAndSeize = true;
-	GByte * binData = VSIGetMemFileBuffer(outName.c_str(), &outDataLength, bUnlinkAndSeize);
-	if (outDataLength > 0 && binData != nullptr)
-	{
-	imgData.resize(outDataLength);
-	memcpy(imgData._Myptr(), binData, outDataLength);
-	CPLFree(binData);
-	}
-	}
-	GDALClose(hVRTDS); */
 	//
 	if (is_all_ok) {
 		return "ok";

@@ -1422,10 +1422,10 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 	{
 		processed_num++;
 		cout << "\n" <<processed_num << "/" << total_num << endl;
-		if (processed_num%100==0) 
+		/*if (processed_num%100==0) 
 		{
 			Sleep(5 * 1000);
-		}
+		}*/
 		//向sqlite更新进度以及下载详细信息
 		if (processed_num % 20 == 0) {
 			record_id++;

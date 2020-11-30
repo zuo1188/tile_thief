@@ -1460,7 +1460,7 @@ std::string CLibGEHelper::getImage(double minX, double minY, double maxX, double
 		QtNodeBounds(name, is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
 		std::string str_bbox = std::to_string(tmpMinX) + "_" + std::to_string(tmpMinY) + "_" + std::to_string(tmpMaxX) + "_" + std::to_string(tmpMaxY);
 		//
-		std::string zxy = std::to_string(level) + "_" + std::to_string(y) + "_" + std::to_string(y);
+		std::string zxy = std::to_string(level) + "_" + std::to_string(x) + "_" + std::to_string(y);
 		auto imgFilePath = ssEncodePath.str();
 		if ((_access(imgFilePath.c_str(), 0)) != -1) {
 			cout << "already downloaded" << endl;
@@ -1898,12 +1898,49 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 	adfGeoTransform[5] = resY;
 	GDALSetGeoTransform(hVRTDS, adfGeoTransform);
 
-	std::vector<std::string> vtMemFiles;
 	std::string allName;
 	bool firstDS = true;
 	bool is_all_ok = true;
+	long total_num = names.size();
+	//下载成功的瓦片数量
+	long download_ok_num = 0;
+	//下载qtree失败的瓦片数量
+	long get_qtree_failed_num = 0;
+	//从qtree获取version失败的瓦片数量
+	long get_version_failed_num = 0;
+	//下载image失败的瓦片数量
+	long get_image_failed_num = 0;
+	//已处理过的瓦片数量
+	long processed_num = 0;
+	//
+	long record_id = 0;
+	//
+	std::vector<DownloadDetailInfo> download_detail_infos;
+	//
 	for (int i = 0; i < names.size(); i++)
 	{
+		processed_num++;
+		cout << "\n" << processed_num << "/" << total_num << endl;
+		/*if (processed_num%100==0)
+		{
+		Sleep(5 * 1000);
+		}*/
+		//向sqlite更新进度以及下载详细信息
+		if (processed_num % 20 == 0) {
+			record_id++;
+			std::stringstream ss;
+			ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << processed_num - 1;
+			CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
+			//
+			if (!download_detail_infos.empty()) {
+				for (int i = 0; i < download_detail_infos.size(); ++i) {
+					auto d = download_detail_infos[i];
+					CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+				}
+				download_detail_infos.clear();
+			}
+		}
+		//
 		std::string name = names.at(i);
 		if (allName.empty())
 			allName = name;
@@ -1916,8 +1953,25 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 		//
 		std::stringstream ssEncodePath;
 		ssEncodePath << _cachePath << "\\" << level << "\\" << x << "\\" << y << ".tif";
+		//
+		double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
+		unsigned int tmplevel;
+		QtNodeBounds(name, is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
+		std::string str_bbox = std::to_string(tmpMinX) + "_" + std::to_string(tmpMinY) + "_" + std::to_string(tmpMaxX) + "_" + std::to_string(tmpMaxY);
+		//
+		std::string zxy = std::to_string(level) + "_" + std::to_string(x) + "_" + std::to_string(y);
+		//
 		auto imgFilePath = ssEncodePath.str();
 		if ((_access(imgFilePath.c_str(), 0)) != -1) {
+			cout << "already downloaded" << endl;
+			download_ok_num++;
+			DownloadDetailInfo download_detail_info;
+			download_detail_info.id = i;
+			download_detail_info.level = level;
+			download_detail_info.zxy = zxy;
+			download_detail_info.bbox = str_bbox;
+			download_detail_info.download_status = "already_downloaded";
+			download_detail_infos.push_back(download_detail_info);
 			continue;
 		}
 
@@ -1925,119 +1979,78 @@ std::string CLibGEHelper::getTerrain(double minX, double minY, double maxX, doub
 		int nRows = 0;
 		std::string imgData = getTerrain(name.c_str(), 0, &nCols, &nRows, is_mercator);
 		if (imgData == "get_version_failed") {
-			return "error";
+			if (!getTmDBRoot()) return "ip_blocked";
+			get_version_failed_num++;
+			std::cout << "get_version_failed" << std::endl;
+		}
+		else if (imgData == "get_qtree_failed") {
+			if (!getTmDBRoot()) return "ip_blocked";
+			get_qtree_failed_num++;
+			std::cout << "get_qtree_failed" << std::endl;
+		}
+		else if (imgData == "get_img_failed") {
+			if (!getTmDBRoot()) return "ip_blocked";
+			get_image_failed_num++;
+			std::cout << "get_img_failed" << std::endl;
 		}
 		else if (imgData == "no_disk_space") {
+			std::cout << "no_disk_space" << std::endl;
 			return "no_disk_space";
 		}
 
-		if (imgData.size() <= 0) {
+		if (imgData.size() <= 0 || imgData == "get_version_failed" || imgData == "get_qtree_failed" || imgData == "get_img_failed") {
+			std::cout << "get " << name << " failed" << std::endl;
 			is_all_ok = false;
+			//
+			DownloadDetailInfo download_detail_info;
+			download_detail_info.id = i;
+			download_detail_info.level = level;
+			download_detail_info.zxy = zxy;
+			download_detail_info.bbox = str_bbox;
+			download_detail_info.download_status = imgData;
+			download_detail_infos.push_back(download_detail_info);
+			//
+			if (processed_num == total_num){
+				std::stringstream ss;
+				ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << total_num;
+				CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
+			}
+			//
 			continue;
 		}
-
-		//double tmpMinX, tmpMinY, tmpMaxX, tmpMaxY;
-		//unsigned int tmplevel;
-		//QtNodeBounds(name, is_mercator, &tmpMinY, &tmpMinX, &tmpMaxY, &tmpMaxX, &tmplevel);
-		//double cellSizeX = (tmpMaxX - tmpMinX) / nCols;
-		//double cellSizeY = (tmpMinY - tmpMaxY) / nRows;
-		//double adfGeoTransform[6];
-		//adfGeoTransform[0] = tmpMinX;
-		//adfGeoTransform[1] = cellSizeX;
-		//adfGeoTransform[2] = 0;
-		//adfGeoTransform[3] = tmpMaxY;
-		//adfGeoTransform[4] = 0;
-		//adfGeoTransform[5] = cellSizeY;
-
-		//std::stringstream ssMemFile;
-		//ssMemFile << "/vsimem/" << name << ".tif";
-		//GDALDataset* poMemDS = poDriver->Create(ssMemFile.str().c_str(), nCols, nRows, 1, GDT_Float32, nullptr);
-		//if (poMemDS == nullptr)
-		//	continue;
-
-		//poMemDS->SetGeoTransform(adfGeoTransform);
-		//poMemDS->SetProjection(strPrj.c_str());
-		//poMemDS->GetRasterBand(1)->SetNoDataValue(-FLT_MAX);
-		//poMemDS->GetRasterBand(1)->RasterIO(GF_Write, 0, 0, nCols, nRows, imgData._Myptr(), nCols, nRows, GDT_Float32, 0, 0);
-		//poMemDS->FlushCache();
-		//vtMemFiles.push_back(ssMemFile.str());
-
-		//if (firstDS)
-		//{
-		//	for (int j = 0; j < poMemDS->GetRasterCount(); j++)
-		//	{
-		//		GDALRasterBandH hBand;
-		//		GDALAddBand(hVRTDS, poMemDS->GetRasterBand(j + 1)->GetRasterDataType(), nullptr);
-		//		hBand = GDALGetRasterBand(hVRTDS, j + 1);
-		//		GDALSetRasterColorInterpretation(hBand, poMemDS->GetRasterBand(j + 1)->GetColorInterpretation());
-		//		int hasNoDataValue = 0;
-		//		double noDataValue = poMemDS->GetRasterBand(j + 1)->GetNoDataValue(&hasNoDataValue);
-		//		if (hasNoDataValue)
-		//			GDALSetRasterNoDataValue(hBand, noDataValue);
-		//	}
-		//	firstDS = false;
-		//}
-
-		//int left = 0;
-		//int top = 0;
-		//int right = poMemDS->GetRasterXSize();
-		//int bottom = poMemDS->GetRasterYSize();
-		//if (tmpMinX < minX)
-		//	left = (int)(0.5 + (minX - tmpMinX) / cellSizeX);
-		//if (tmpMaxX > maxX)
-		//	right = (int)(0.5 + (maxX - tmpMinX) / cellSizeX) + 1;
-		//if (tmpMinY < minY)
-		//	bottom = (int)(0.5 + (tmpMaxY - minY) / -cellSizeY) + 1;
-		//if (tmpMaxY > maxY)
-		//	top = (int)(0.5 + (tmpMaxY - maxY) / -cellSizeY);
-		//left = __min(__max(0, left), poMemDS->GetRasterXSize() - 1);
-		//right = __min(__max(0, right), poMemDS->GetRasterXSize());
-		//top = __min(__max(0, top), poMemDS->GetRasterYSize() - 1);
-		//bottom = __min(__max(0, bottom), poMemDS->GetRasterYSize());
-		//if (left == right || top == bottom)
-		//{
-		//	GDALClose(poMemDS);
-		//	continue;
-		//}
-
-		//int xoffset = (int)(0.5 + (__max(tmpMinX, minX) - minX) / resX);
-		//int yoffset = (int)(0.5 + (maxY - __min(tmpMaxY, maxY)) / -resY);
-		//int xoffset2 = (int)(0.5 + (__min(tmpMaxX, maxX) - minX) / resX);
-		//int yoffset2 = (int)(0.5 + (maxY - __max(tmpMinY, minY)) / -resY);
-		//int dest_width = xoffset2 - xoffset;// (int)(0.5 + (right - left) * cellSizeX / resX);
-		//int dest_height = yoffset2 - yoffset;// (int)(0.5 + (bottom - top) * cellSizeY / resY);
-		//xoffset = __min(__max(0, xoffset), rasterXSize - 1);
-		//dest_width = __min(__max(0, dest_width), rasterXSize);
-		//yoffset = __min(__max(0, yoffset), rasterYSize - 1);
-		//dest_height = __min(__max(0, dest_height), rasterYSize);
-
-
-		//for (int j = 0; j < poMemDS->GetRasterCount(); j++)
-		//{
-		//	VRTSourcedRasterBandH hVRTBand = (VRTSourcedRasterBandH)GDALGetRasterBand(hVRTDS, j + 1);
-
-		//	/* Place the raster band at the right position in the VRT */
-		//	VRTAddSimpleSource(hVRTBand, GDALGetRasterBand(poMemDS, j + 1),
-		//		left, top,
-		//		right - left,
-		//		bottom - top,
-		//		xoffset, yoffset,
-		//		dest_width, dest_height, "near",
-		//		VRT_NODATA_UNSET);
-		//}
+		//
+		download_ok_num++;
+		//
+		DownloadDetailInfo download_detail_info;
+		download_detail_info.id = i;
+		download_detail_info.level = level;
+		download_detail_info.zxy = zxy;
+		download_detail_info.bbox = str_bbox;
+		download_detail_info.download_status = "ok";
+		download_detail_infos.push_back(download_detail_info);
 	}
-
-	std::string imgData;
-	if (GDALGetRasterCount(hVRTDS) > 0)
+	//向sqlite更新进度
 	{
-		imgData.resize(rasterXSize*rasterYSize*sizeof(float));
-		GDALRasterIO(GDALGetRasterBand(hVRTDS, 1), GF_Read, 0, 0, rasterXSize, rasterYSize, imgData._Myptr(), rasterXSize, rasterYSize, GDT_Float32, 0, 0);
+		record_id++;
+		std::stringstream ss;
+		ss << total_num << "_" << download_ok_num << "_" << get_qtree_failed_num << "_" << get_version_failed_num << "_" << get_image_failed_num << "_" << total_num;
+		CacheManager::GetInstance().AddProgress(record_id, level, ss.str(), CacheManager::TYPE_PROGRESS);
 	}
-	GDALClose(hVRTDS);
 
-	for (int i = 0; i < vtMemFiles.size(); i++)
-		VSIUnlink(vtMemFiles[i].c_str());
-	return is_all_ok ? "ok" : "error";
+	if (!download_detail_infos.empty()) {
+		for (int i = 0; i < download_detail_infos.size(); ++i) {
+			auto d = download_detail_infos[i];
+			CacheManager::GetInstance().AddImageDowndDetailInfo(d.id, d.level, d.zxy, d.bbox, d.download_status);
+		}
+		download_detail_infos.clear();
+	}
+	//
+	if (is_all_ok) {
+		return "ok";
+	}
+	//
+	if (!getTmDBRoot()) return "ip_blocked";
+	return "error";
 }
 
 

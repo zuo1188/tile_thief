@@ -26,6 +26,7 @@ from utils.custom_request import custom_request, check_key
 
 SERVER_URL_MAPPING = {
     "google_map_sat": "http://mt0.google.cn/vt/lyrs=s&hl=en&x={x}&y={y}&z={z}",
+    "google_map_vector": "http://mt0.google.cn/vt/lyrs=m&hl=en&x={x}&y={y}&z={z}",
     "amap_sat": "https://webst04.is.autonavi.com/appmaptile?style=6&x={x}&y={y}&z={z}",
     "tianditu_sat": "http://t2.tianditu.gov.cn/DataServer?T=img_w&x={x}&y={y}&l={z}&tk=997487c2aa6dc93d84169f293ae2073d",
     "bing_sat": "",

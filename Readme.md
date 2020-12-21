@@ -146,7 +146,7 @@ example:
 - **min_zoom:** 最小缩放层级 0~22
 - **max_zoom:** 最大缩放层级 0~22
 - **geometry:** geojson格式下载范围
-- **map_type:** 地图类型
+- **map_type:** 地图类型 google_map_vector google_map_sat amap_sat tianditu_sat bing_sat tencent_sat baidu_sat google_earth_sat google_earth_dem
 - **output_dir:** 输出文件夹目录
 - **process_count:** 并发数
 
